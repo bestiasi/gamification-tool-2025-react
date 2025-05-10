@@ -1,0 +1,52 @@
+# Project Dependencies
+
+This project uses Node.js and npm (or yarn) to manage dependencies.
+
+All project dependencies are listed in the `package.json` file:
+
+-   **`dependencies`**: These are packages required for the application to run in production.
+-   **`devDependencies`**: These are packages needed only for local development and testing (e.g., linters, build tools, testing libraries).
+
+## Installing Dependencies
+
+To install all necessary dependencies, navigate to the project's root directory in your terminal and run:
+
+Using npm:
+```bash
+npm install
+```
+
+Or using yarn:
+```bash
+yarn install
+```
+
+This command will download and install all packages listed in `package.json` into the `node_modules` directory (which is typically ignored by version control, see `.gitignore`).
+
+## Adding New Dependencies
+
+To add a new runtime dependency:
+
+Using npm:
+```bash
+npm install <package-name>
+```
+
+Or using yarn:
+```bash
+yarn add <package-name>
+```
+
+To add a new development dependency:
+
+Using npm:
+```bash
+npm install <package-name> --save-dev
+```
+
+Or using yarn:
+```bash
+yarn add <package-name> --dev
+```
+
+These commands will install the package and automatically update your `package.json` and `package-lock.json` (or `yarn.lock`) files.
