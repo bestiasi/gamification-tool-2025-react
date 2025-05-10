@@ -1,10 +1,9 @@
-# Project Title
-
-Brief description of your project.
+# BEST Iasi Gamification Tool 2025
+This is the repository for the BEST Iasi Gamification Tool 2025, a web application built using React and Vite.
 
 ## Prerequisites
 
-- Node.js (version v23.11.0 or higher)
+- Node.js (version v23.x.x)
 - npm (version 10.9.2 or higher)
 
 ## Getting Started
@@ -21,7 +20,7 @@ Brief description of your project.
     npm install
     ```
 
-3.  **Run the development server:**
+3.  **Run the development server on local:**
     Using npm:
     ```bash
     npm run dev
