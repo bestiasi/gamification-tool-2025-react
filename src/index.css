@@ -13,8 +13,8 @@
 }
 
 body {
-  background-image: url("./src/assets/background.svg");
-  }
+  background-image: url('/assets/background.svg');
+}
 
 a {
   font-weight: 500;
