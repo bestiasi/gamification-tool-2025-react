@@ -4,17 +4,19 @@ import './Header.css';
 interface HeaderProps {
   logo?: string;
   title?: string;
-  links?: { text: string; url: string }[];
+  links?: { text: string; url: string; active?: boolean }[];
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   logo = '/assets/background.svg', 
-  title = 'Site-ul Meu', 
+  title = 'BEST IAȘI', 
   links = [
-    { text: 'Acasă', url: '/' },
-    { text: 'Despre', url: '/despre' },
-    { text: 'Servicii', url: '/servicii' },
-    { text: 'Contact', url: '/contact' }
+    { text: 'HR', url: '#' },
+    { text: 'PR', url: '#' },
+    { text: 'IT', url: '#' },
+    { text: 'FR', url: '#' },
+    { text: 'GLOBAL', url: '#' },
+    { text: 'ACASA', url: '#', active: true }
   ] 
 }) => {
   const [scrolled, setScrolled] = useState(false);
@@ -42,7 +44,9 @@ const Header: React.FC<HeaderProps> = ({
           <ul className="nav-links">
             {links.map((link, index) => (
               <li key={index}>
-                <a href={link.url}>{link.text}</a>
+                <a href={link.url} className={link.active ? 'active' : ''}>
+                  {link.text}
+                </a>
               </li>
             ))}
           </ul>
@@ -68,6 +72,7 @@ const Header: React.FC<HeaderProps> = ({
               <li key={index}>
                 <a 
                   href={link.url}
+                  className={link.active ? 'active' : ''}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.text}
