@@ -7,7 +7,7 @@ import App from './App';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Header 
-      logo="/assets/background.svg"
+      logo="/assets/logo.svg" // Calea corectă către logo
       title="BEST IAȘI"
       links={[
         { text: 'HR', url: '#' },

@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  logo = '/assets/background.svg', 
+  logo = '/logo.svg', 
   title = 'BEST IAȘI', 
   links = [
     { text: 'HR', url: '#' },
