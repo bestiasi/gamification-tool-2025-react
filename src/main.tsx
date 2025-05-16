@@ -1,14 +1,16 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import Header from './Header'; // Importăm Header direct din folder datorită fișierului index.ts
+import Header from './Header';
+import Footer from './Footer';
 import App from './App';
+
+// Notă: Asigură-te că fișierul logo_best.png există în folderul src/assets sau public/assets
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Header 
-      logo="/assets/logo.svg" // Calea corectă către logo
-      title="BEST IAȘI"
+      logo="/src/assets/logo best.png" // Verifică dacă această cale este corectă
       links={[
         { text: 'HR', url: '#' },
         { text: 'PR', url: '#' },
@@ -19,5 +21,6 @@ createRoot(document.getElementById('root')!).render(
       ]}
     />
     <App />
+    <Footer />
   </StrictMode>
 );

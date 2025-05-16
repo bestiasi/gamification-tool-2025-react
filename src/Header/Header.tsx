@@ -3,13 +3,11 @@ import './Header.css';
 
 interface HeaderProps {
   logo?: string;
-  title?: string;
   links?: { text: string; url: string; active?: boolean }[];
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  logo = '/logo.svg', 
-  title = 'BEST IAȘI', 
+  logo = '/assets/logo_best.png', 
   links = [
     { text: 'HR', url: '#' },
     { text: 'PR', url: '#' },
@@ -21,24 +19,30 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+  
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
+  
   return (
     <header className={`header ${scrolled ? 'header-scrolled' : ''}`}>
       <div className="header-container">
-        <div className="logo-container">
-          {logo && <img src={logo} alt="Logo" className="logo" />}
-          {title && <h1 className="site-title">{title}</h1>}
-        </div>
-
+      <div className="logo-container">
+  {/* Adăugăm link-ul către bestis.ro pe logo */}
+  <a 
+    href="https://bestis.ro/" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="logo-link"
+  >
+    <img src={logo} alt="BEST IAȘI Logo" className="logo" />
+  </a>
+</div>
+        
         {/* Desktop navigation */}
         <nav className="desktop-nav">
           <ul className="nav-links">
@@ -51,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({
             ))}
           </ul>
         </nav>
-
+        
         {/* Mobile menu button */}
         <button 
           className="mobile-menu-button"
@@ -64,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({
             <span></span>
           </div>
         </button>
-
+        
         {/* Mobile navigation */}
         <nav className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
           <ul className="mobile-nav-links">
