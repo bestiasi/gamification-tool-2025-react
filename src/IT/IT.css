@@ -1,0 +1,121 @@
+.it-page {
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  background-color: #222222;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+/* Banner albastru lipit de header */
+.banner-section {
+  width: 100%;
+  background-color: #007bff; /* Culoare albastră pentru IT */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 0;
+  margin-bottom: 30px;
+}
+
+.icon-wrapper {
+  font-size: 28px;
+  margin-right: 15px;
+}
+
+.banner-title {
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+}
+
+/* Conținut principal */
+.main-content {
+  flex: 1;
+  padding: 0 20px 40px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Tabel */
+.table-wrapper {
+  width: 90%;
+  max-width: 1200px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 25px rgba(0,0,0,0.3);
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.score-table th {
+  background-color: #a9c9ff; /* Albastru deschis pentru header */
+  color: #333;
+  font-weight: bold;
+  text-align: center;
+  padding: 15px 10px;
+  border: 1px solid #7eafff;
+  text-transform: uppercase;
+}
+
+/* Linii alternante */
+.row-light td {
+  background-color: #d8e7ff; /* Albastru foarte deschis */
+  color: #333;
+  padding: 12px 10px;
+  border: 1px solid #b8d1ff;
+  text-align: center;
+}
+
+.row-dark td {
+  background-color: #b3d1ff; /* Albastru deschis */
+  color: #333;
+  padding: 12px 10px;
+  border: 1px solid #8cb8ff;
+  text-align: center;
+}
+
+/* Hover effect */
+.score-table tbody tr:hover td {
+  background-color: #80b0ff; /* Albastru mai intens la hover */
+  transition: background-color 0.3s;
+}
+
+/* Lățimi coloane */
+.name-col { width: 25%; }
+.score-col { width: 15%; }
+.task-col { width: 60%; }
+
+/* Bara albastră de footer */
+.footer-bar {
+  width: 100%;
+  height: 15px;
+  background-color: #007bff;
+  margin-top: auto;
+}
+
+/* Media queries pentru responsive */
+@media (max-width: 768px) {
+  .banner-title {
+    font-size: 20px;
+  }
+  
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .score-table th, 
+  .score-table td {
+    font-size: 12px;
+    padding: 8px 5px;
+  }
+}

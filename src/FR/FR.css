@@ -1,0 +1,196 @@
+.fr-page {
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  background-color: #222222; /* Același fundal gri închis ca la HR */
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Banner mov lipit de header - SE PĂSTREAZĂ CULOAREA MOV */
+.banner-section {
+  width: 100%;
+  background-color: #6f42c1; /* Mov pentru FR */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 0;
+  margin-bottom: 30px;
+}
+
+.icon-wrapper {
+  font-size: 28px;
+  margin-right: 15px;
+}
+
+.banner-title {
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+}
+
+/* Conținut principal */
+.main-content {
+  flex: 1;
+  padding: 0 20px 40px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Tabel cu nuanțele de galben din HR */
+.table-wrapper {
+  width: 90%;
+  max-width: 1200px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 25px rgba(0,0,0,0.3);
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.score-table th {
+  background-color: #f8e9a1; /* Galben deschis ca în HR */
+  color: #333;
+  font-weight: bold;
+  text-align: center;
+  padding: 15px 10px;
+  border: 1px solid #ddd;
+  text-transform: uppercase;
+}
+
+/* Linii alternante în tabel */
+.row-light td {
+  background-color: #f8e9a1; /* Galben deschis ca în HR */
+  color: #333;
+  padding: 12px 10px;
+  border: 1px solid #e5d77e;
+  text-align: center;
+}
+
+.row-dark td {
+  background-color: #ffda47; /* Galben mai închis ca în HR */
+  color: #333;
+  padding: 12px 10px;
+  border: 1px solid #e5d77e;
+  text-align: center;
+}
+
+/* Hover effect */
+.score-table tbody tr:hover td {
+  background-color: #ffc107; /* Galben mai intens la hover ca în HR */
+  transition: background-color 0.3s;
+}
+
+/* Lățimi coloane */
+.name-col { width: 25%; }
+.score-col { width: 15%; }
+.task-col { width: 60%; }
+
+/* Bara de deasupra footer - ACUM CU GALBENUL DIN HR */
+.footer-bar {
+  width: 100%;
+  height: 15px;
+  background-color: #FFCC33; /* GALBEN din HR în loc de mov */
+  margin-top: auto;
+}
+
+/* Elemente decorative */
+.decorative-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Stele - ACUM CU GALBENUL DIN HR */
+.star {
+  position: absolute;
+  color: #FFCC33; /* GALBEN din HR în loc de mov */
+  opacity: 0.6;
+  font-size: 30px;
+  z-index: 1;
+}
+
+.star-1 {
+  top: 10%;
+  left: 5%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.star-2 {
+  top: 20%;
+  right: 10%;
+  animation: float 8s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.star-3 {
+  bottom: 15%;
+  left: 8%;
+  animation: float 7s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.star-4 {
+  bottom: 20%;
+  right: 5%;
+  animation: float 9s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.star-5 {
+  top: 50%;
+  left: 3%;
+  animation: float 7s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.star-6 {
+  top: 40%;
+  right: 8%;
+  animation: float 6s ease-in-out infinite;
+  animation-delay: 2.5s;
+}
+
+/* Animație plutitoare */
+@keyframes float {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+  .banner-title {
+    font-size: 20px;
+  }
+  
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .score-table th, 
+  .score-table td {
+    font-size: 12px;
+    padding: 8px 5px;
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom'; // Adăugăm importurile pentru React Router
 import './Header.css';
 
 interface HeaderProps {
@@ -7,18 +8,19 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  logo = '/assets/logo_best.png', 
+logo = "/src/assets/logo best.png",
   links = [
-    { text: 'HR', url: '#' },
-    { text: 'PR', url: '#' },
-    { text: 'IT', url: '#' },
-    { text: 'FR', url: '#' },
-    { text: 'GLOBAL', url: '#' },
-    { text: 'ACASA', url: '#', active: true }
+    { text: 'HR', url: '/hr' }, // Schimbăm URL-urile pentru a folosi React Router
+    { text: 'PR', url: '/pr' },
+    { text: 'IT', url: '/it' },
+    { text: 'FR', url: '/fr' },
+    { text: 'GLOBAL', url: '/global' },
+    { text: 'ACASA', url: '/', active: true }
   ] 
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation(); // Hook pentru a obține locația curentă
   
   useEffect(() => {
     const handleScroll = () => {
@@ -28,29 +30,40 @@ const Header: React.FC<HeaderProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
+  // Funcție pentru a determina dacă un link este activ
+  const isLinkActive = (url: string) => {
+    if (url === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(url);
+  };
+  
   return (
     <header className={`header ${scrolled ? 'header-scrolled' : ''}`}>
       <div className="header-container">
-      <div className="logo-container">
-  {/* Adăugăm link-ul către bestis.ro pe logo */}
-  <a 
-    href="https://bestis.ro/" 
-    target="_blank" 
-    rel="noopener noreferrer"
-    className="logo-link"
-  >
-    <img src={logo} alt="BEST IAȘI Logo" className="logo" />
-  </a>
-</div>
+        <div className="logo-container">
+          {/* Pentru logo, păstrăm link-ul extern */}
+          <a 
+            href="https://bestis.ro/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="logo-link"
+          >
+            <img src={logo} alt="BEST IAȘI Logo" className="logo" />
+          </a>
+        </div>
         
-        {/* Desktop navigation */}
+        {/* Desktop navigation - folosim Link în loc de a */}
         <nav className="desktop-nav">
           <ul className="nav-links">
             {links.map((link, index) => (
               <li key={index}>
-                <a href={link.url} className={link.active ? 'active' : ''}>
+                <Link 
+                  to={link.url} 
+                  className={isLinkActive(link.url) ? 'active' : ''}
+                >
                   {link.text}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -69,18 +82,18 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         </button>
         
-        {/* Mobile navigation */}
+        {/* Mobile navigation - folosim Link în loc de a */}
         <nav className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
           <ul className="mobile-nav-links">
             {links.map((link, index) => (
               <li key={index}>
-                <a 
-                  href={link.url}
-                  className={link.active ? 'active' : ''}
+                <Link 
+                  to={link.url}
+                  className={isLinkActive(link.url) ? 'active' : ''}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.text}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
