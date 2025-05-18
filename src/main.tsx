@@ -11,7 +11,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <Header 
-                  logo="/src/assets/logo best.png" // Verifică dacă această cale este corectă
+                  logo="/icons/logo best.png" // Verifică dacă această cale este corectă
         links={[
           { text: 'HR', url: '/hr' },
           { text: 'PR', url: '/pr' },
