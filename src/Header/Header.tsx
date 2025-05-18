@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-logo = "/src/assets/logo best.png",
+logo = "/icons/logo best.png",
   links = [
     { text: 'HR', url: '/hr' }, // Schimbăm URL-urile pentru a folosi React Router
     { text: 'PR', url: '/pr' },
