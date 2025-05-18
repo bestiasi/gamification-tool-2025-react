@@ -10,7 +10,7 @@ import App from './App';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Header 
-      logo="/src/assets/logo best.png" // Verifică dacă această cale este corectă
+      logo="/icons/logo best.png"
       links={[
         { text: 'HR', url: '#' },
         { text: 'PR', url: '#' },

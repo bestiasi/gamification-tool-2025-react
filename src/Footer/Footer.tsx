@@ -29,7 +29,7 @@ const Footer: React.FC<FooterProps> = ({
         <div className="footer-branding">
           <div className="footer-logo">
             {/* Folosim o cale publică pentru logo în loc de import */}
-            <img src="/src/assets/logo best.png" alt="BEST IAȘI Logo" />
+            <img src="/icons/logo best.png" alt="BEST IAȘI Logo" />
           </div>
           <p className="footer-copyright-year">
             {yearText}
