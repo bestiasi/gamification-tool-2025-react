@@ -1,433 +1,144 @@
+import { useEffect } from 'react';
 import '../App.css';
 import './IT.css';
 
-function ITComponent() {
+function IT() {
+  // JavaScript pentru hover simultan pe nume și scor ca în imagine
+  useEffect(() => {
+    const table = document.querySelector('.it-table');
+    if (!table) return;
+    
+    // Găsește toate rândurile din tabel
+    const rows = table.querySelectorAll('tbody tr');
+    const eventListeners: Array<{element: Element, event: string, handler: () => void}> = [];
+    
+    rows.forEach(row => {
+      const nameCell = row.querySelector('td:nth-child(1)');
+      const scoreCell = row.querySelector('td:nth-child(2)');
+      
+      if (!nameCell || !scoreCell) return;
+      
+      // Funcție pentru a adăuga hover simultan pe nume și scor
+      const addSimultaneousHover = () => {
+        nameCell.classList.add('js-hover');
+        scoreCell.classList.add('js-hover');
+      };
+      
+      // Funcție pentru a elimina hover simultan
+      const removeSimultaneousHover = () => {
+        nameCell.classList.remove('js-hover');
+        scoreCell.classList.remove('js-hover');
+      };
+      
+      // Event listeners pentru nume
+      nameCell.addEventListener('mouseenter', addSimultaneousHover);
+      nameCell.addEventListener('mouseleave', removeSimultaneousHover);
+      
+      // Event listeners pentru scor
+      scoreCell.addEventListener('mouseenter', addSimultaneousHover);
+      scoreCell.addEventListener('mouseleave', removeSimultaneousHover);
+      
+      // Salvează referințele pentru cleanup
+      eventListeners.push(
+        {element: nameCell, event: 'mouseenter', handler: addSimultaneousHover},
+        {element: nameCell, event: 'mouseleave', handler: removeSimultaneousHover},
+        {element: scoreCell, event: 'mouseenter', handler: addSimultaneousHover},
+        {element: scoreCell, event: 'mouseleave', handler: removeSimultaneousHover}
+      );
+    });
+
+    // Cleanup function pentru a elimina event listeners
+    return () => {
+      eventListeners.forEach(({element, event, handler}) => {
+        element.removeEventListener(event, handler);
+      });
+    };
+  }, []); // Se execută o dată când componenta se încarcă
+
+  // Datele pentru tabelul IT din imagine
+  const tableData = [
+    { name: "NUME 1", score: 100 },
+    { name: "NUME 2", score: 70 },
+    { name: "NUME 3", score: 50 },
+    { name: "...", score: "..." },
+    { name: "...", score: "..." },
+    { name: "...", score: "..." },
+    { name: "NUME N", score: 1 },
+  ];
+
+  // Task-urile specifice pentru IT din imagine
+  const tasksData = [
+    'AI O RESPONSABILITATE PE DEPARTAMENT (150P)',
+    'CREAZA WEBSITE-UL DE EVENIMENT TURA 1 FB (200P)',
+    'CREAZA WEBSITE-UL DE EVENIMENT TURA 2 FB(50P)',
+    'REALIZEAZA MOCKUP LA SITE (FIGMA/DESIGNXD) TURA 1 FB(50P)',
+    'REALIZEAZA MOCKUP LA SITE (FIGMA/DESIGNXD) TURA 2 FB(25P)',
+    'REALIZEAZA NECESARUL DE LOGISTICA TURA 1 FB(25P)',
+    'REALIZEAZA NECESARUL DE LOGISTICA TURA 2 FB(25P)',
+  ];
+
   return (
     <div className="it-page">
-      {/* Elemente decorative similare cu HR */}
-      <div className="decorative-elements">
-        <div className="star star-1">★</div>
-        <div className="star star-2">★</div>
-        <div className="star star-3">★</div>
-        <div className="star star-4">★</div>
-        <div className="star star-5">★</div>
-        <div className="star star-6">★</div>
+      <div className="it-top-banner">
+        <div className="icon-container">
+          💻 {/* Iconiță specifică pentru IT */}
+        </div>
+        <h1>PUNCTAJ ANUAL IT</h1>
       </div>
 
-      {/* Banner albastru lipit de header */}
-      <div className="banner-section">
-        <div className="icon-wrapper">💻</div>
-        <h1 className="banner-title">DEPARTAMENT IT</h1>
-      </div>
-
-      {/* Conținut principal cu tabelul */}
-      <div className="main-content">
-        <div className="table-wrapper">
-          <table className="score-table">
+      <div className="it-content">
+        <div className="it-table-container">
+          <table className="it-table">
             <thead>
               <tr>
-                <th className="name-col">NUME ȘI PRENUME BESTIAN</th>
-                <th className="score-col">PUNCTAJ TOTAL</th>
-                <th className="task-col">PUNCTAJ FIECARE TASK</th>
+                <th className="name-column">NUME ȘI PRENUME BESTIAN</th>
+                <th className="score-column">PUNCTAJ TOTAL</th>
+                <th className="task-column">PUNCTAJ FIECARE TASK</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="row-light">
-                <td>Coman Stefan</td>
-                <td>1445</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Creaza website-ul de eveniment tura 2 fb (50p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 2 fb (25p)<br />
-                  Realizeaza necesarul de logistica tura 1 fb (25p)<br />
-                  Realizeaza necesarul de logistica tura 2 fb (25p)<br />
-                  Creare noul design tricou/honoarar de departament (150p)<br />
-                  Realizarea unui mentorat/WS pe IT (React/Wordpress) (250p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Butacu Catalin</td>
-                <td>1340</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 2 fb (25p)<br />
-                  Realizeaza necesarul de logistica tura 1 fb (25p)<br />
-                  Creare noul design tricou/honoarar de departament (150p)<br />
-                  Realizarea unui mentorat/WS pe IT (React/Wordpress) (250p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Stoean Vlad</td>
-                <td>820</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 2 fb (25p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Spinu Ioana Teodora</td>
-                <td>785</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizarea unui mentorat/WS pe IT (React/Wordpress) (250p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Rotaru Irina</td>
-                <td>760</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 2 fb (25p)<br />
-                  Realizeaza un tutorial (Google Analytics/URL Builder etc) (100p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Turceac Tiberiu</td>
-                <td>585</td>
-                <td>
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizeaza un tutorial (Google Analytics/URL Builder etc) (100p)<br />
-                  Participare la o activitate pe departament (concursul de pasi) (10p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Cocovoicu Tudor</td>
-                <td>625</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 2 fb (25p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Caba Andrei</td>
-                <td>455</td>
-                <td>
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Lipirea a 10 afise in camine, facultati, campus si/sau stalpi (25p)<br />
-                  Realizarea unui tutorial (Google Analytics/URL Builder etc) (100p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Stefan-Vladut Radu</td>
-                <td>330</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 2 fb (25p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Manoliu Lukas</td>
-                <td>315</td>
-                <td>
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Lipirea a 10 afise in camine, facultati, campus si/sau stalpi (25p)<br />
-                  Se ocupa de depunerea unei cereri (10p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Pintilii Ana Rebeca</td>
-                <td>355</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Creaza website-ul de eveniment tura 1 fb (200p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Sergei Sinigribov</td>
-                <td>910</td>
-                <td>
-                  Ai o responsabilitate pe departament (150p)<br />
-                  Creaza website-ul de eveniment tura 1 fb (200p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 2 fb (25p)<br />
-                  Realizeaza un tutorial (Google Analytics/URL Builder etc) (100p)<br />
-                  Creare noul design tricou/honoarar de departament (150p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Caprian Denisa</td>
-                <td>170</td>
-                <td>
-                  Realizarea unui mentorat/WS pe IT (React/Wordpress) (150p)<br />
-                  Participare la o activitate pe departament (concursul de pasi) (10p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Diaconu Daniel</td>
-                <td>182</td>
-                <td>
-                  Creaza website-ul de eveniment tura 1 fb (100p)<br />
-                  Realizeaza mockup la site (Figma/DesignXD) tura 1 fb (50p)<br />
-                  Participare la o activitate pe departament (concursul de pasi) (10p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Ghiurca Andrei</td>
-                <td>180</td>
-                <td>
-                  Realizarea unui tutorial (Google Analytics/URL Builder etc) (100p)<br />
-                  Lipirea a 10 afise in camine, facultati, campus si/sau stalpi (25p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Zarnica Alexandru</td>
-                <td>177</td>
-                <td>
-                  Realizarea unui tutorial (Google Analytics/URL Builder etc) (100p)<br />
-                  Lipirea a 10 afise in camine, facultati, campus si/sau stalpi (25p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Miron Smaranda-Gabriela</td>
-                <td>155</td>
-                <td>
-                  Realizarea unui tutorial (Google Analytics/URL Builder etc) (100p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Andrei Andrusca</td>
-                <td>145</td>
-                <td>
-                  Realizarea unui tutorial (Google Analytics/URL Builder etc) (100p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Matei Stefan-Cristian</td>
-                <td>135</td>
-                <td>
-                  Realizarea unui tutorial (Google Analytics/URL Builder etc) (100p)<br />
-                  Participarea la un mentorat/WS/training pe IT (30p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Mihut Robert</td>
-                <td>82</td>
-                <td>
-                  Lipirea a 10 afise in camine, facultati, campus si/sau stalpi (25p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Plugaru Paraschiva (Coca)</td>
-                <td>80</td>
-                <td>
-                  Lipirea a 10 afise in camine, facultati, campus si/sau stalpi (25p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Bujoreanu Iulian</td>
-                <td>70</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Biciusca Rares</td>
-                <td>65</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)<br />
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Atomei Cristian</td>
-                <td>50</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Miron Xenia</td>
-                <td>50</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Vacarciuc Alexandru</td>
-                <td>50</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (50p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Craciun Elisaveta</td>
-                <td>45</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (45p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Mannescu Ioana</td>
-                <td>45</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (45p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Cusmir Paul</td>
-                <td>40</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (40p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Yasmeen</td>
-                <td>40</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (40p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Cozaru Cezara</td>
-                <td>35</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (35p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Achitei Alexandru</td>
-                <td>30</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (30p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Adam Iasmina</td>
-                <td>30</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (30p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Alupului Diana</td>
-                <td>30</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (30p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Baetu Narcis</td>
-                <td>30</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (30p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Ciobanu Ana-Maria</td>
-                <td>30</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (30p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Rachieru Lavinia</td>
-                <td>30</td>
-                <td>
-                  Participarea la un mentorat/WS/training pe IT (30p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Bacalie Roxana</td>
-                <td>20</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)<br />
-                  Se ocupa de depunerea unei cereri (10p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Morosanu George (Horhe)</td>
-                <td>20</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)<br />
-                  Se ocupa de depunerea unei cereri (10p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Nica Mirela</td>
-                <td>20</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)<br />
-                  Se ocupa de depunerea unei cereri (10p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Petrisor Edi</td>
-                <td>20</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)<br />
-                  Se ocupa de depunerea unei cereri (10p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Toscariu Alexandra</td>
-                <td>20</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)<br />
-                  Se ocupa de depunerea unei cereri (10p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Hoha Elena Nona</td>
-                <td>10</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Matei Iordache</td>
-                <td>10</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)
-                </td>
-              </tr>
-              <tr className="row-light">
-                <td>Rotari Cristina</td>
-                <td>10</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)
-                </td>
-              </tr>
-              <tr className="row-dark">
-                <td>Varga Matteo</td>
-                <td>10</td>
-                <td>
-                  Participare la o activitate pe departament (concursul de pasi) (10p)
-                </td>
-              </tr>
+              {tableData.map((person, index) => (
+                <tr key={index} className={index % 2 === 0 ? "row-light" : "row-dark"}>
+                  <td className="name-column">{person.name}</td>
+                  <td className="score-column">{person.score}</td>
+                  {index === 0 && (
+                    <td rowSpan={tableData.length} className="task-column">
+                      <div className="task-text-large">
+                        {tasksData.map((task, taskIndex) => (
+                          <span key={taskIndex}>
+                            <strong>{task}</strong>
+                            {taskIndex < tasksData.length - 1 && <><br /><br /></>}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Bara galbenă înainte de footer */}
-      <div className="footer-bar"></div>
+      {/* Elemente decorative ca în imagine */}
+      <div className="decorative-elements">
+        <div className="star star-1">⭐</div>
+        <div className="star star-2">✨</div>
+        <div className="star star-3">⭐</div>
+        <div className="star star-4">✨</div>
+        <div className="star star-5">⭐</div>
+        <div className="star star-6">✨</div>
+        
+        <div className="decoration decoration-1">💫</div>
+        <div className="decoration decoration-2">🌟</div>
+        <div className="decoration decoration-3">💫</div>
+        <div className="decoration decoration-4">🌟</div>
+        <div className="decoration decoration-5">💫</div>
+      </div>
+
+      <div className="it-footer-banner"></div>
     </div>
   );
 }
 
-export default ITComponent;
+export default IT;

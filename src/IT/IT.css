@@ -1,121 +1,246 @@
+/* General Page Styles */
 .it-page {
-  width: 100%;
+  font-family: 'Arial', sans-serif;
+  color: white;
+  background-color: #222222; /* Fundal negru ca în imagine */
   min-height: calc(100vh - 80px);
-  background-color: #222222;
   display: flex;
   flex-direction: column;
   padding: 0;
   margin: 0;
   position: relative;
+  overflow: hidden;
 }
 
-/* Banner albastru lipit de header */
-.banner-section {
+/* Top Banner Styles */
+.it-top-banner {
   width: 100%;
-  background-color: #007bff; /* Culoare albastră pentru IT */
+  background-color: #FFCC33; /* Galben ca în imagine */
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 15px 0;
-  margin-bottom: 30px;
+  padding: 20px 0;
+  position: relative;
+  margin: 0 0 30px 0; /* Margin pentru a coborî tabelul */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.icon-wrapper {
-  font-size: 28px;
+.it-top-banner .icon-container {
   margin-right: 15px;
+  font-size: 28px;
 }
 
-.banner-title {
-  color: white;
+.it-top-banner h1 {
+  margin: 0;
   font-size: 28px;
   font-weight: bold;
-  margin: 0;
   text-transform: uppercase;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Conținut principal */
-.main-content {
+/* Content Area */
+.it-content {
   flex: 1;
-  padding: 0 20px 40px;
+  padding: 20px 30px 40px;
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
-/* Tabel */
-.table-wrapper {
+/* Table Container */
+.it-table-container {
   width: 90%;
   max-width: 1200px;
+  margin: 0 auto;
+  background-color: transparent;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 0 25px rgba(0,0,0,0.3);
+  position: relative;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
-.score-table {
+/* Table Styles */
+.it-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  background-color: transparent;
 }
 
-.score-table th {
-  background-color: #a9c9ff; /* Albastru deschis pentru header */
+.it-table th {
+  background-color: #f8e9a1; /* Header galben deschis ca în imagine */
   color: #333;
   font-weight: bold;
   text-align: center;
   padding: 15px 10px;
-  border: 1px solid #7eafff;
+  border: 1px solid #ddd;
   text-transform: uppercase;
+  font-size: 14px;
 }
 
-/* Linii alternante */
-.row-light td {
-  background-color: #d8e7ff; /* Albastru foarte deschis */
+/* Row Styles - alternante ca în imagine */
+.it-table tr.row-light td {
+  background-color: #f8e9a1; /* Galben deschis pentru rândurile pare */
   color: #333;
   padding: 12px 10px;
-  border: 1px solid #b8d1ff;
+  border: 1px solid #e5d77e;
   text-align: center;
+  font-size: 14px;
 }
 
-.row-dark td {
-  background-color: #b3d1ff; /* Albastru deschis */
+.it-table tr.row-dark td {
+  background-color: #ffda47; /* Galben închis pentru rândurile impare */
   color: #333;
   padding: 12px 10px;
-  border: 1px solid #8cb8ff;
+  border: 1px solid #e5d77e;
   text-align: center;
+  font-size: 14px;
 }
 
-/* Hover effect */
-.score-table tbody tr:hover td {
-  background-color: #80b0ff; /* Albastru mai intens la hover */
-  transition: background-color 0.3s;
+/* Column-specific widths */
+.name-column {
+  width: 25%;
 }
 
-/* Lățimi coloane */
-.name-col { width: 25%; }
-.score-col { width: 15%; }
-.task-col { width: 60%; }
+.score-column {
+  width: 15%;
+}
 
-/* Bara albastră de footer */
-.footer-bar {
+.task-column {
+  width: 60%;
+}
+
+/* HOVER EFFECTS ca în imagine */
+/* Hover simultan pentru nume și scor */
+.it-table tr td:nth-child(1).js-hover,
+.it-table tr td:nth-child(2).js-hover {
+  background-color: #FFC107 !important;
+  color: #000 !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover independent pentru task-uri */
+.it-table tr td:nth-child(3):hover {
+  background-color: #ffe066 !important;
+  color: #333 !important;
+  cursor: default;
+  transition: background-color 0.3s ease;
+}
+
+/* Task text styling */
+.task-text-large {
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+.task-text-large strong {
+  font-weight: bold;
+}
+
+/* Footer Banner ca în imagine */
+.it-footer-banner {
   width: 100%;
   height: 15px;
-  background-color: #007bff;
+  background-color: #FFCC33; /* Galben ca în imagine */
   margin-top: auto;
+  position: relative;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
 }
 
-/* Media queries pentru responsive */
+/* Decorative Elements ca în imagine */
+.decorative-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.star {
+  position: absolute;
+  color: #FFCC33; /* Galben pentru stelele IT ca în imagine */
+  opacity: 0.6;
+  font-size: 30px;
+  z-index: 1;
+}
+
+.star-1 { top: 10%; left: 5%; animation: float 6s ease-in-out infinite; }
+.star-2 { top: 20%; right: 10%; animation: float 8s ease-in-out infinite; animation-delay: 1s; }
+.star-3 { bottom: 15%; left: 8%; animation: float 7s ease-in-out infinite; animation-delay: 2s; }
+.star-4 { bottom: 20%; right: 5%; animation: float 9s ease-in-out infinite; animation-delay: 0.5s; }
+.star-5 { top: 50%; left: 3%; animation: float 7s ease-in-out infinite; animation-delay: 1.5s; }
+.star-6 { top: 40%; right: 8%; animation: float 6s ease-in-out infinite; animation-delay: 2.5s; }
+
+.decoration {
+  position: absolute;
+  color: #FFCC33;
+  opacity: 0.4;
+  font-size: 24px;
+  z-index: 1;
+}
+
+.decoration-1 { top: 35%; left: 15%; animation: float 5s ease-in-out infinite; }
+.decoration-2 { bottom: 30%; right: 15%; animation: float 7s ease-in-out infinite; animation-delay: 1s; }
+.decoration-3 { top: 70%; left: 20%; animation: float 6s ease-in-out infinite; animation-delay: 1.5s; }
+.decoration-4 { top: 25%; right: 25%; animation: float 8s ease-in-out infinite; animation-delay: 2s; }
+.decoration-5 { bottom: 40%; left: 30%; animation: float 7s ease-in-out infinite; animation-delay: 2.5s; }
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .banner-title {
-    font-size: 20px;
-  }
-  
-  .table-wrapper {
+  .it-table-container {
     width: 100%;
     overflow-x: auto;
   }
   
-  .score-table th, 
-  .score-table td {
+  .it-top-banner h1 {
+    font-size: 20px;
+  }
+  
+  .it-table th, .it-table td {
     font-size: 12px;
     padding: 8px 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .it-top-banner {
+    padding: 15px;
+    flex-direction: column;
+  }
+  
+  .it-top-banner .icon-container {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .it-top-banner h1 {
+    font-size: 1.5em;
+  }
+  
+  .it-content {
+    padding: 15px;
+  }
+  
+  .it-table th,
+  .it-table td {
+    padding: 8px 5px;
+    font-size: 0.8em;
+  }
+  
+  .task-text-large {
+    font-size: 0.85em;
   }
 }

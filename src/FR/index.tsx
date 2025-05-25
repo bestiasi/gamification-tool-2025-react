@@ -1,79 +1,142 @@
+import { useEffect } from 'react';
 import '../App.css';
 import './FR.css';
 
 function FR() {
+  // JavaScript pentru hover simultan pe nume și scor ca în imagine
+  useEffect(() => {
+    const table = document.querySelector('.fr-table');
+    if (!table) return;
+    
+    // Găsește toate rândurile din tabel
+    const rows = table.querySelectorAll('tbody tr');
+    const eventListeners: Array<{element: Element, event: string, handler: () => void}> = [];
+    
+    rows.forEach(row => {
+      const nameCell = row.querySelector('td:nth-child(1)');
+      const scoreCell = row.querySelector('td:nth-child(2)');
+      
+      if (!nameCell || !scoreCell) return;
+      
+      // Funcție pentru a adăuga hover simultan pe nume și scor
+      const addSimultaneousHover = () => {
+        nameCell.classList.add('js-hover');
+        scoreCell.classList.add('js-hover');
+      };
+      
+      // Funcție pentru a elimina hover simultan
+      const removeSimultaneousHover = () => {
+        nameCell.classList.remove('js-hover');
+        scoreCell.classList.remove('js-hover');
+      };
+      
+      // Event listeners pentru nume
+      nameCell.addEventListener('mouseenter', addSimultaneousHover);
+      nameCell.addEventListener('mouseleave', removeSimultaneousHover);
+      
+      // Event listeners pentru scor
+      scoreCell.addEventListener('mouseenter', addSimultaneousHover);
+      scoreCell.addEventListener('mouseleave', removeSimultaneousHover);
+      
+      // Salvează referințele pentru cleanup
+      eventListeners.push(
+        {element: nameCell, event: 'mouseenter', handler: addSimultaneousHover},
+        {element: nameCell, event: 'mouseleave', handler: removeSimultaneousHover},
+        {element: scoreCell, event: 'mouseenter', handler: addSimultaneousHover},
+        {element: scoreCell, event: 'mouseleave', handler: removeSimultaneousHover}
+      );
+    });
+
+    // Cleanup function pentru a elimina event listeners
+    return () => {
+      eventListeners.forEach(({element, event, handler}) => {
+        element.removeEventListener(event, handler);
+      });
+    };
+  }, []); // Se execută o dată când componenta se încarcă
+
+  // Datele pentru tabelul FR
+  const tableData = [
+    { name: "NUME 1", score: 100 },
+    { name: "NUME 2", score: 70 },
+    { name: "NUME 3", score: 50 },
+    { name: "...", score: "..." },
+    { name: "...", score: "..." },
+    { name: "...", score: "..." },
+    { name: "NUME N", score: 1 },
+  ];
+
+  // Task-urile specifice pentru FR
+  const tasksData = [
+    'AI O RESPONSABILITATE PE DEPARTAMENT (150P)',
+    'IDENTIFICARE SURSE DE FINANȚARE (250P)',
+    'SCRIERE PROIECT DE FINANȚARE (300P)',
+    'MANAGEMENT BUGET PROIECT (150P)',
+    'RAPORTARE FINANCIARĂ (100P)',
+    'NEGOCIERE CONTRACTE SPONSORIZARE (200P)',
+    'MANAGEMENT SPONSORI (180P)',
+  ];
+
   return (
     <div className="fr-page">
-      {/* Elemente decorative similare cu HR */}
-      <div className="decorative-elements">
-        <div className="star star-1">★</div>
-        <div className="star star-2">★</div>
-        <div className="star star-3">★</div>
-        <div className="star star-4">★</div>
-        <div className="star star-5">★</div>
-        <div className="star star-6">★</div>
+      <div className="fr-top-banner">
+        <div className="icon-container">
+          💰 {/* Iconiță specifică pentru FR */}
+        </div>
+        <h1>PUNCTAJ ANUAL FR</h1>
       </div>
 
-      {/* Banner mov lipit de header */}
-      <div className="banner-section">
-        <div className="icon-wrapper">💰</div>
-        <h1 className="banner-title">DEPARTAMENT FR</h1>
-      </div>
-
-      {/* Conținut principal cu tabelul */}
-      <div className="main-content">
-        <div className="table-wrapper">
-          <table className="score-table">
+      <div className="fr-content">
+        <div className="fr-table-container">
+          <table className="fr-table">
             <thead>
               <tr>
-                <th className="name-col">NUME ȘI PRENUME BESTIAN</th>
-                <th className="score-col">PUNCTAJ TOTAL</th>
-                <th className="task-col">PUNCTAJ FIECARE TASK</th>
+                <th className="name-column">NUME ȘI PRENUME BESTIAN</th>
+                <th className="score-column">PUNCTAJ TOTAL</th>
+                <th className="task-column">PUNCTAJ FIECARE TASK</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="row-light">
-                <td>NUME 1</td>
-                <td>100</td>
-                <td>ATRAGERE SPONSORI PRINCIPALI (150P)</td>
-              </tr>
-              <tr className="row-dark">
-                <td>NUME 2</td>
-                <td>90</td>
-                <td>DEZVOLTARE STRATEGIE FUNDRAISING (120P)</td>
-              </tr>
-              <tr className="row-light">
-                <td>NUME 3</td>
-                <td>75</td>
-                <td>ORGANIZARE EVENIMENT DE STRÂNGERE FONDURI (100P)</td>
-              </tr>
-              <tr className="row-dark">
-                <td>...</td>
-                <td>...</td>
-                <td>RELAȚII CU SPONSORI (80P)</td>
-              </tr>
-              <tr className="row-light">
-                <td>...</td>
-                <td>...</td>
-                <td>GESTIONARE BUGET (110P)</td>
-              </tr>
-              <tr className="row-dark">
-                <td>...</td>
-                <td>...</td>
-                <td>COORDONARE ECHIPĂ FUNDRAISING (130P)</td>
-              </tr>
-              <tr className="row-light">
-                <td>NUME N</td>
-                <td>30</td>
-                <td>PARTICIPARE LA TRAINING FUNDRAISING (50P)</td>
-              </tr>
+              {tableData.map((person, index) => (
+                <tr key={index} className={index % 2 === 0 ? "row-light" : "row-dark"}>
+                  <td className="name-column">{person.name}</td>
+                  <td className="score-column">{person.score}</td>
+                  {index === 0 && (
+                    <td rowSpan={tableData.length} className="task-column">
+                      <div className="task-text-large">
+                        {tasksData.map((task, taskIndex) => (
+                          <span key={taskIndex}>
+                            <strong>{task}</strong>
+                            {taskIndex < tasksData.length - 1 && <><br /><br /></>}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Bara mov înainte de footer */}
-      <div className="footer-bar"></div>
+      {/* Elemente decorative ca în imagine */}
+      <div className="decorative-elements">
+        <div className="star star-1">⭐</div>
+        <div className="star star-2">✨</div>
+        <div className="star star-3">⭐</div>
+        <div className="star star-4">✨</div>
+        <div className="star star-5">⭐</div>
+        <div className="star star-6">✨</div>
+        
+        <div className="decoration decoration-1">💫</div>
+        <div className="decoration decoration-2">🌟</div>
+        <div className="decoration decoration-3">💫</div>
+        <div className="decoration decoration-4">🌟</div>
+        <div className="decoration decoration-5">💫</div>
+      </div>
+
+      <div className="fr-footer-banner"></div>
     </div>
   );
 }
