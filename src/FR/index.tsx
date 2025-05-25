@@ -55,26 +55,88 @@ function FR() {
     };
   }, []); // Se execută o dată când componenta se încarcă
 
-  // Datele pentru tabelul FR
+  // Datele pentru tabelul FR din imaginile furnizate (exclud cei cu 0 puncte)
   const tableData = [
-    { name: "NUME 1", score: 100 },
-    { name: "NUME 2", score: 70 },
-    { name: "NUME 3", score: 50 },
-    { name: "...", score: "..." },
-    { name: "...", score: "..." },
-    { name: "...", score: "..." },
-    { name: "NUME N", score: 1 },
-  ];
+    { name: "Andronache Codrina", score: 2622 },
+    { name: "Azoltei Cristina", score: 170 },
+    { name: "Caprian Denisa", score: 995 },
+    { name: "Coman Stefan", score: 1341 },
+    { name: "Butacu Catalin", score: 260 },
+    { name: "Diaconu Daniel", score: 930 },
+    { name: "Pintiuc Ana Rebeca", score: 425 },
+    { name: "Simionescu Edmond", score: 2035 },
+    { name: "Cotovan Teodora", score: 2172 },
+    { name: "Spinu Ioana Teodora", score: 533 },
+    { name: "Matei Stefan-Cristian", score: 871 },
+    { name: "Vacarciuc Alexandru", score: 325 },
+    { name: "Cozminca Smaranda", score: 1044 },
+    { name: "Craciun Elisaveta", score: 170 },
+    { name: "Caba Andrei", score: 63 },
+    { name: "Lupu Cosette Ioana", score: 250 },
+    { name: "Zarnica Alexandru", score: 50 },
+    { name: "Cozaru Cezara", score: 644 },
+    { name: "Stefan-Vladut Radu", score: 750 },
+    { name: "Toscariu Alexandra", score: 60 },
+    { name: "Yasmeen", score: 89 },
+    { name: "Rotaru Irina", score: 50 },
+    { name: "Busaga Maria", score: 50 },
+    { name: "Stoean Vlad", score: 120 },
+    { name: "Turceac Tiberiu", score: 50 },
+    { name: "Miron Xenia", score: 50 },
+    { name: "Atomei Cristian", score: 263 },
+    { name: "Varga Matteo", score: 350 },
+    { name: "Barcan Nicoleta", score: 80 },
+    { name: "Bacaita Roxana", score: 50 },
+    { name: "Plugaru Paraschiva (Coca)", score: 50 },
+    { name: "Paduraru Mara", score: 89 },
+    { name: "Cusmir Paul", score: 50 },
+    { name: "Manolache Ana", score: 50 },
+    { name: "Craciun Iuliana", score: 50 },
+    { name: "Ciobanu Ana-Maria", score: 50 },
+    { name: "Nica Mirela", score: 50 },
+    { name: "Bujoreanu Iulian", score: 50 },
+    { name: "Ghurea Andrei", score: 50 },
+    { name: "Petrisor Edi", score: 50 },
+    { name: "Achitei Alexandru", score: 50 },
+    { name: "Dascalu Laura", score: 50 },
+    { name: "Ifrim Simina-Ana", score: 50 },
+    { name: "Biciusca Rares", score: 50 },
+    { name: "Baetu Narcis", score: 50 },
+    { name: "Cojocariu Lucian", score: 50 },
+    { name: "Rotari Cristina", score: 50 },
+    { name: "Piu Bianca-Raluca", score: 50 },
+    { name: "Popescu Ana", score: 50 },
+    { name: "Miron Smaranda-Gabriela", score: 50 },
+    { name: "Andrei Alexandru-Marian", score: 50 },
+    { name: "Iftimescu Andreea", score: 50 },
+    { name: "Tataru Maria-Alexandra", score: 50 },
+    { name: "Cocoveica Tudor", score: 50 }
+  ].filter(person => person.score > 0); // Exclud automat cei cu 0 puncte
 
-  // Task-urile specifice pentru FR
+  // Task-urile specifice pentru FR din lista furnizată
   const tasksData = [
-    'AI O RESPONSABILITATE PE DEPARTAMENT (150P)',
-    'IDENTIFICARE SURSE DE FINANȚARE (250P)',
-    'SCRIERE PROIECT DE FINANȚARE (300P)',
-    'MANAGEMENT BUGET PROIECT (150P)',
-    'RAPORTARE FINANCIARĂ (100P)',
-    'NEGOCIERE CONTRACTE SPONSORIZARE (200P)',
-    'MANAGEMENT SPONSORI (180P)',
+    'PARTICIPI LA UN TRAINING/MENTORAT FR (50P)',
+    'FACILITEZI SI ORGANIZEZI UN TRAINING/MENTORAT FR (250P)',
+    'AI O RESPONSABILITATE DE DEPARTAMENT (150P)',
+    'CURAT HUBSPOT(1 PCT PER COMPANIE/MAX 100) (2P)',
+    'REALIZAREA DE RESEARCH CPY PENTRU FR LBG EXTRA EVENIMENTE/SEDIU (45P)',
+    'CONTACTAREA UNEI CPY PENTRU FR LBG EXTRA (15P)',
+    'RĂSPUNS POZITIV CPY PENTRU FR LBG EXTRA (85P)',
+    'PARTICIPAREA LA O SESIUNE DE FR DIN SEDIU/2(SEARA) TEMATICA (15P)',
+    'REVENIT CU REMINDER IN MAXIM O SĂPTĂMÂNĂ LA UN EVENIMENT (2P)',
+    'FR PE TEREN (35P)',
+    'SUNAT COMPANII PENTRU UN EVENIMENT (10P)',
+    'O ÎNTÂLNIRE STABILITĂ PENTRU UN EVENIMENT (45P)',
+    'UN RĂSPUNS POZITIV PENTRU CPY TEHNICA (100P)',
+    'UN RĂSPUNS POZITIV PENTRU O CPY BARTER/EDUCATIONAL (70P)',
+    'COMPLETAREA HUBSPOT-ULUI PE ÎNTREAGA DURATĂ A PROCESULUI DE FR LA EVENIMENTUL RESPECTIV (180P)',
+    'PARTICIPAREA LA O SESIUNE DEDICATĂ DE SUNAT DIN SEDIU (15P)',
+    'PARTICIPAREA LA UN TRAINING EXTERN FR/GRANTS RELATED (85P)',
+    'ADUCEREA DE CĂRȚI DE VIZITĂ DIN EVENIMENTE DE NETWORKING (45P)',
+    'RESEARCH DE GRANTURI (260P)',
+    'SCRIERE/PREGĂTIRE GRANTURI (35P)',
+    'FEEDBACK GRANTURI (215P)',
+    'TASK EXTRA PE GRANTURI (170P)'
   ];
 
   return (
@@ -91,7 +153,7 @@ function FR() {
           <table className="fr-table">
             <thead>
               <tr>
-                <th className="name-column">NUME ȘI PRENUME BESTIAN</th>
+                <th className="name-column">NUME ȘI PRENUME BESTAN</th>
                 <th className="score-column">PUNCTAJ TOTAL</th>
                 <th className="task-column">PUNCTAJ FIECARE TASK</th>
               </tr>

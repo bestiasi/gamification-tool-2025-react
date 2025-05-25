@@ -2,12 +2,13 @@
 .pr-page {
   font-family: 'Arial', sans-serif;
   color: white;
-  background-color: #222222; /* Fundal negru ca la HR */
-  min-height: calc(100vh - 80px);
+  background-color: #222222;
+  min-height: calc(100vh - 100px);
   display: flex;
   flex-direction: column;
   padding: 0;
   margin: 0;
+  margin-top: 100px;
   position: relative;
   overflow: hidden;
 }
@@ -15,29 +16,29 @@
 /* Top Banner Styles */
 .pr-top-banner {
   width: 100%;
-  background-color: #6F2DBD; /* Purple color pentru PR */
+  background-color: #FFCC33;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 0;
+  padding: 28px 0; /* REDUS de la 35px la 28px */
   position: relative;
-  margin: 0 0 30px 0; /* Margin pentru a coborî tabelul */
+  margin: 0 0 30px 0;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .pr-top-banner .icon-container {
-  margin-right: 15px;
-  font-size: 28px;
+  margin-right: 18px; /* REDUS de la 20px la 18px */
+  font-size: 42px; /* REDUS de la 48px la 42px */
 }
 
 .pr-top-banner h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 42px; /* REDUS de la 48px la 42px */
   font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1.5px; /* REDUS de la 2px la 1.5px */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Content Area */
@@ -72,33 +73,49 @@
 }
 
 .pr-table th {
-  background-color: #f8e9a1; /* Header galben deschis ca la HR */
+  background-color: #f8e9a1;
   color: #333;
   font-weight: bold;
   text-align: center;
-  padding: 15px 10px;
+  vertical-align: middle;
+  padding: 20px 8px;
   border: 1px solid #ddd;
   text-transform: uppercase;
-  font-size: 14px;
+  font-size: 18px;
+  line-height: 1.2;
+  height: 60px;
 }
 
-/* Row Styles - alternante ca la HR */
+/* REGULA SPECIALĂ PENTRU CELULA CU TASK-URI */
+.pr-table td.task-column {
+  padding: 0 !important;
+  vertical-align: top !important;
+  border: 1px solid #e5d77e;
+}
+
+/* Row Styles */
 .pr-table tr.row-light td {
-  background-color: #f8e9a1; /* Galben deschis pentru rândurile pare */
+  background-color: #f8e9a1;
   color: #333;
-  padding: 12px 10px;
+  padding: 15px 8px;
   border: 1px solid #e5d77e;
   text-align: center;
-  font-size: 14px;
+  vertical-align: middle;
+  font-size: 16px;
+  line-height: 1.4;
+  height: 50px;
 }
 
 .pr-table tr.row-dark td {
-  background-color: #ffda47; /* Galben închis pentru rândurile impare */
+  background-color: #ffda47;
   color: #333;
-  padding: 12px 10px;
+  padding: 15px 8px;
   border: 1px solid #e5d77e;
   text-align: center;
-  font-size: 14px;
+  vertical-align: middle;
+  font-size: 16px;
+  line-height: 1.4;
+  height: 50px;
 }
 
 /* Column-specific widths */
@@ -112,10 +129,12 @@
 
 .task-column {
   width: 60%;
+  text-align: center !important;
+  vertical-align: top !important;
+  padding: 5px 10px !important; /* PADDING MINIM */
 }
 
-/* HOVER EFFECTS ca la HR */
-/* Hover simultan pentru nume și scor */
+/* HOVER EFFECTS */
 .pr-table tr td:nth-child(1).js-hover,
 .pr-table tr td:nth-child(2).js-hover {
   background-color: #FFC107 !important;
@@ -123,7 +142,6 @@
   transition: background-color 0.3s ease;
 }
 
-/* Hover independent pentru task-uri */
 .pr-table tr td:nth-child(3):hover {
   background-color: #ffe066 !important;
   color: #333 !important;
@@ -133,25 +151,29 @@
 
 /* Task text styling */
 .task-text-large {
-  font-size: 1.1em;
-  line-height: 1.6;
+  font-size: 1.3em;
+  line-height: 1.5;
+  padding: 0;
+  text-align: center;
+  display: block;
+  margin: 0;
 }
 
 .task-text-large strong {
   font-weight: bold;
 }
 
-/* Footer Banner ca la HR */
+/* Footer Banner */
 .pr-footer-banner {
   width: 100%;
   height: 15px;
-  background-color: #FFCC33; /* Galben ca la HR în loc de purple */
+  background-color: #FFCC33;
   margin-top: auto;
   position: relative;
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
 }
 
-/* Decorative Elements ca la HR */
+/* Decorative Elements */
 .decorative-elements {
   position: absolute;
   top: 0;
@@ -164,7 +186,7 @@
 
 .star {
   position: absolute;
-  color: #6F2DBD; /* Purple pentru stelele PR */
+  color: #FFCC33;
   opacity: 0.6;
   font-size: 30px;
   z-index: 1;
@@ -179,7 +201,7 @@
 
 .decoration {
   position: absolute;
-  color: #6F2DBD;
+  color: #FFCC33;
   opacity: 0.4;
   font-size: 24px;
   z-index: 1;
@@ -200,47 +222,77 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .pr-page {
+    margin-top: 85px;
+  }
+
   .pr-table-container {
     width: 100%;
     overflow-x: auto;
   }
   
   .pr-top-banner h1 {
-    font-size: 20px;
+    font-size: 32px;
   }
   
-  .pr-table th, .pr-table td {
-    font-size: 12px;
-    padding: 8px 5px;
+  .pr-top-banner .icon-container {
+    font-size: 32px;
+  }
+  
+  .pr-table th {
+    font-size: 14px;
+    padding: 15px 5px;
+    height: 50px;
+  }
+  
+  .pr-table td {
+    font-size: 13px;
+    padding: 12px 5px;
+    height: 45px;
+  }
+  
+  .task-text-large {
+    font-size: 1.1em;
   }
 }
 
 @media (max-width: 480px) {
+  .pr-page {
+    margin-top: 80px;
+  }
+
   .pr-top-banner {
-    padding: 15px;
+    padding: 25px 15px;
     flex-direction: column;
   }
   
   .pr-top-banner .icon-container {
     margin-right: 0;
     margin-bottom: 10px;
+    font-size: 28px;
   }
   
   .pr-top-banner h1 {
-    font-size: 1.5em;
+    font-size: 24px;
   }
   
   .pr-content {
     padding: 15px;
   }
   
-  .pr-table th,
+  .pr-table th {
+    padding: 12px 4px;
+    font-size: 12px;
+    height: 45px;
+  }
+  
   .pr-table td {
-    padding: 8px 5px;
-    font-size: 0.8em;
+    padding: 10px 4px;
+    font-size: 11px;
+    height: 40px;
   }
   
   .task-text-large {
-    font-size: 0.85em;
+    font-size: 1em;
   }
 }

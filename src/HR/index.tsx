@@ -55,18 +55,52 @@ function HR() {
     };
   }, []); // Se execută o dată când componenta se încarcă
 
-  // Datele pentru tabelul HR din imagine
+  // Datele pentru tabelul HR din imagini - în ordinea exactă (exclud cei cu 0 puncte)
   const tableData = [
-    { name: "NUME 1", score: 100 },
-    { name: "NUME 2", score: 70 },
-    { name: "NUME 3", score: 50 },
-    { name: "...", score: "..." },
-    { name: "...", score: "..." },
-    { name: "...", score: "..." },
-    { name: "NUME N", score: 1 },
-  ];
+    { name: "Achitei Alexandru", score: 150 },
+    { name: "Alupului Diana", score: 50 },
+    { name: "Andrei Alexandru-Marian", score: 100 },
+    { name: "Andronache Codrina", score: 300 },
+    { name: "Azoltei Cristina", score: 2190 },
+    { name: "Bacaita Roxana", score: 150 },
+    { name: "Barcan Nicoleta", score: 150 },
+    { name: "Biciusca Rares", score: 75 },
+    { name: "Busaga Maria", score: 500 },
+    { name: "Butacu Catalin", score: 725 },
+    { name: "Caba Andrei", score: 700 },
+    { name: "Caprian Denisa", score: 725 },
+    { name: "Ciobanu Ana-Maria", score: 125 },
+    { name: "Coman Stefan", score: 50 },
+    { name: "Cozaru Cezara", score: 490 },
+    { name: "Cozminca Smaranda", score: 350 },
+    { name: "Craciun Elisaveta", score: 415 },
+    { name: "Cusmir Paul", score: 125 },
+    { name: "Dascalu Laura", score: 200 },
+    { name: "Diaconu Daniel", score: 325 },
+    { name: "Ghurea Andrei", score: 75 },
+    { name: "Lupu Cosette Ioana", score: 400 },
+    { name: "Matei Stefan-Cristian", score: 100 },
+    { name: "Miron Smaranda-Gabriela", score: 400 },
+    { name: "Miron Xenia", score: 50 },
+    { name: "Morosanu George (florhe)", score: 200 },
+    { name: "Petrisor Edi", score: 150 },
+    { name: "Pintiuc Ana Rebeca", score: 500 },
+    { name: "Plugaru Paraschiva (Coca)", score: 150 },
+    { name: "Rachieru Lavinia", score: 250 },
+    { name: "Rotaru Irina", score: 200 },
+    { name: "Simionescu Edmond", score: 150 },
+    { name: "Spinu Ioana Teodora", score: 75 },
+    { name: "Stefan-Vladut Radu", score: 565 },
+    { name: "Stircia Bogdan", score: 65 },
+    { name: "Tudorache Afrodita", score: 700 },
+    { name: "Turceac Tiberiu", score: 100 },
+    { name: "Vacarciuc Alexandru", score: 400 },
+    { name: "Varga Matteo", score: 15 },
+    { name: "Yasmeen", score: 50 },
+    { name: "Zarnica Alexandru", score: 615 }
+  ].filter(person => person.score > 0); // Exclud automat cei cu 0 puncte
 
-  // Task-urile specifice pentru HR din imagine
+  // Task-urile specifice pentru HR din imaginile furnizate
   const tasksData = [
     'AI O RESPONSABILITATE PE DEPARTAMENT (ECHIPE, SECRETAR, BECAS, BEST MOOD) (150P)',
     'ORGANIZEZI O ACTIVITATE DE FUN (100P)',
@@ -75,6 +109,20 @@ function HR() {
     'ORGANIZEZI UN TEAMBUILDING (100P)',
     'FACILITEZI UN TEAMBUILDING (200P)',
     'PARTICIPI LA UN TEAMBUILDING (50P)',
+    'FACI PARTE DIN CLUBUL DE LECTURA ACTIV (50P)',
+    'PARTICIPI LA O ÎNTÂLNIRE A CLUBULUI DE LECTURA (15P)',
+    'REALIZEZI UN FORMULAR DE FEEDBACK (150P)',
+    'COMPLETEZI 3 FORMULARE DE FEEDBACK (100P/3 FORMULARE)',
+    'CREEZI UN TOOL DE MONITORIZARE (75P)',
+    'FACILITEZI SI ORGANIZEZI UN TRAINING/MENTORIAT HR (250P)',
+    'PARTICIPI LA UN TRAINING/BKT/MENTORAT HR (50P)',
+    'PARTICIPI LA ADVERSARE (50P)',
+    'PARTICIPI ACTIV LA RECRUTARI (INTERVIUATOR, OBSERVER, PROMO CAMINE, GRĂSELI ETC.) (75P)',
+    'EȘTI PARINTE (150P)',
+    'RESPONSABIL TCOTO (75P)',
+    'RESP. MEME-URI (75P)',
+    'TASK ON-EVENT (WAKE-UP, BAR, CHECK IN ETC) (15/TASK)',
+    'REALIZEZI UN FORMULAR DE AȘTEPTĂRI (100P)'
   ];
 
   return (
@@ -91,7 +139,7 @@ function HR() {
           <table className="hr-table">
             <thead>
               <tr>
-                <th className="name-column">NUME ȘI PRENUME BESTIAN</th>
+                <th className="name-column">NUME ȘI PRENUME BESTAN</th>
                 <th className="score-column">PUNCTAJ TOTAL</th>
                 <th className="task-column">PUNCTAJ FIECARE TASK</th>
               </tr>

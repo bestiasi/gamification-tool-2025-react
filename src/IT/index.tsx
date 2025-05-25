@@ -55,16 +55,62 @@ function IT() {
     };
   }, []); // Se execută o dată când componenta se încarcă
 
-  // Datele pentru tabelul IT din imagine
+  // Datele pentru tabelul IT din imagini - în ordinea exactă (exclud cei cu 0 puncte)
   const tableData = [
-    { name: "NUME 1", score: 100 },
-    { name: "NUME 2", score: 70 },
-    { name: "NUME 3", score: 50 },
-    { name: "...", score: "..." },
-    { name: "...", score: "..." },
-    { name: "...", score: "..." },
-    { name: "NUME N", score: 1 },
-  ];
+    { name: "Achitei Alexandru", score: 30 },
+    { name: "Adam Iasmina", score: 30 },
+    { name: "Alupului Diana", score: 30 },
+    { name: "Andronache Codrina", score: 195 },
+    { name: "Atomei Cristian", score: 50 },
+    { name: "Azoltei Cristina", score: 170 },
+    { name: "Bacaita Roxana", score: 20 },
+    { name: "Baetu Narcis", score: 30 },
+    { name: "Biciusca Rares", score: 65 },
+    { name: "Bujoreanu Iulian", score: 70 },
+    { name: "Busaga Maria", score: 275 },
+    { name: "Butacu Catalin", score: 1340 },
+    { name: "Caba Andrei", score: 455 },
+    { name: "Caprian Denisa", score: 170 },
+    { name: "Ciobanu Ana-Maria", score: 30 },
+    { name: "Cocoveica Tudor", score: 625 },
+    { name: "Copceanu Lucian", score: 945 },
+    { name: "Coman Stefan", score: 1445 },
+    { name: "Cozaru Cezara", score: 35 },
+    { name: "Cozminca Smaranda", score: 0 }, // Excluded
+    { name: "Craciun Elisaveta", score: 45 },
+    { name: "Cusmir Paul", score: 40 },
+    { name: "Diaconu Daniel", score: 182 },
+    { name: "Ghurea Andrei", score: 180 },
+    { name: "Hoha Elena Nona", score: 10 },
+    { name: "Matei Stefan-Cristian", score: 135 },
+    { name: "Mihalache Mihai", score: 135 },
+    { name: "Miron Smaranda-Gabriela", score: 155 },
+    { name: "Miron Xenia", score: 50 },
+    { name: "Morosanu George (florhe)", score: 20 },
+    { name: "Nica Mirela", score: 20 },
+    { name: "Petrisor Edi", score: 20 },
+    { name: "Pintiuc Ana Rebeca", score: 355 },
+    { name: "Plugaru Paraschiva (Coca)", score: 80 },
+    { name: "Rachieru Lavinia", score: 30 },
+    { name: "Rotari Cristina", score: 10 },
+    { name: "Rotaru Irina", score: 760 },
+    { name: "Simionescu Edmond", score: 90 },
+    { name: "Spinu Ioana Teodora", score: 785 },
+    { name: "Stefan-Vladut Radu", score: 330 },
+    { name: "Stoean Vlad", score: 820 },
+    { name: "Toscariu Alexandra", score: 20 },
+    { name: "Turceac Tiberiu", score: 585 },
+    { name: "Vacarciuc Alexandru", score: 50 },
+    { name: "Yagas Matteo", score: 10 },
+    { name: "Yasmeen", score: 40 },
+    { name: "Zarnica Alexandru", score: 177 },
+    { name: "Mihut Robert", score: 82 },
+    { name: "Marinescu Ioana", score: 45 },
+    { name: "Manoilu Lukas", score: 315 },
+    { name: "Serghei Smirnobov", score: 910 },
+    { name: "Andrei Andrusca", score: 145 },
+    { name: "Matei Iordache", score: 10 }
+  ].filter(person => person.score > 0); // Exclud automat cei cu 0 puncte
 
   // Task-urile specifice pentru IT din imagine
   const tasksData = [
@@ -75,6 +121,16 @@ function IT() {
     'REALIZEAZA MOCKUP LA SITE (FIGMA/DESIGNXD) TURA 2 FB(25P)',
     'REALIZEAZA NECESARUL DE LOGISTICA TURA 1 FB(25P)',
     'REALIZEAZA NECESARUL DE LOGISTICA TURA 2 FB(25P)',
+    'TINUT PV/AI LA UNA DINTRE SEDINTE (10P)',
+'MANAGERIAZA LOGISTICA SI COORDONAREA ECHIPEI TEHNICE ON EVENT(50P)',
+'FACE PARTE DINTR-O ECHIPA TEHNICA ON EVENT(20P)',
+'REALIZEAZA UN RESEARCH DE SALI/LOCATII PENTRU EVENIMENT(30P)',
+'SE OCUPA DE DEZVOLTAREA UNEI CERERI(10P)',
+'LIPSIRA A 10 ANSE IN CAMINE, FACULTATI, CAMPUS SI/SAU SITE(25P)',
+'CREARE NOUL DESIGN AL TRICOU HONOARAR DE DEPARTAMENT(150P)',
+'REALIZEAZA UNI TUTORUI (GOOGLE ANALYTICS/URL BUILDER ETC) (100P)',
+'PARTICIPARE LA O ACTIVITATE PE DEPARTAMENT (REACT/WORDPRESS) (10P)',
+'REALIZEAZA UNUI MENTORAT/WS/TRAINING PE IT (250P) ',
   ];
 
   return (
