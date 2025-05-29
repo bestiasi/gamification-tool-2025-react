@@ -144,9 +144,17 @@ function PR() {
   return (
     <div className="pr-page">
       <div className="pr-top-banner">
-        <div className="icon-container">
-          📢 {/* Iconiță specifică pentru PR */}
-        </div>
+      <div className="icon-container">
+  <img 
+    src="/icons/logoPR.png"
+    alt="HR Manager" 
+    style={{
+      width: '70px', 
+      height: '70px', 
+    
+    }}
+  />
+</div>
         <h1>PUNCTAJ ANUAL PR</h1>
       </div>
 
@@ -155,7 +163,7 @@ function PR() {
           <table className="pr-table">
             <thead>
               <tr>
-                <th className="name-column">NUME ȘI PRENUME BESTIAN</th>
+                <th className="name-column">NUME ȘI PRENUME BESTAN</th>
                 <th className="score-column">PUNCTAJ TOTAL</th>
                 <th className="task-column">PUNCTAJ FIECARE TASK</th>
               </tr>
@@ -184,21 +192,123 @@ function PR() {
         </div>
       </div>
 
-      {/* Elemente decorative ca la HR */}
-      <div className="decorative-elements">
-        <div className="star star-1">⭐</div>
-        <div className="star star-2">✨</div>
-        <div className="star star-3">⭐</div>
-        <div className="star star-4">✨</div>
-        <div className="star star-5">⭐</div>
-        <div className="star star-6">✨</div>
+     <div className="decorative-elements">
+        {/* STÂNGA -  */}
+        <div className="star stea1">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con1">
+          <img src="/icons/confetiistanga.png" alt="Decorative" />
+        </div>
+        <div className="star stea2">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con2">
+          <img src="/icons/confetiimarestanga.png" alt="Decorative" />
+        </div>
+         <div className="decoration con3">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        <div className="star stea3">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con4">
+          <img src="/icons/confetiistanga.png" alt="Decorative" />
+        </div>
         
-        <div className="decoration decoration-1">💫</div>
-        <div className="decoration decoration-2">🌟</div>
-        <div className="decoration decoration-3">💫</div>
-        <div className="decoration decoration-4">🌟</div>
-        <div className="decoration decoration-5">💫</div>
+         <div className="star stea4">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con5">
+          <img src="/icons/confetiimarestanga.png" alt="Decorative" />
+        </div>
+         <div className="decoration con6">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        
+
+         <div className="star stea5">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+            <div className="decoration con7">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        
+         <div className="star stea6">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+
+             <div className="decoration con8">
+          <img src="/icons/confetiimarestanga.png" alt="Decorative" />
+        </div>
+
+               <div className="star stea7">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+        
+
+             <div className="decoration con9">
+          <img src="/icons/confetiistanga.png" alt="Decorative" />
+        </div>
+
+        
+        
+        {/* DREAPTA - */}
+        <div className="star stea8">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+        <div className="decoration con10">
+          <img src="/icons/confetiidreapta.png" alt="Decorative" />
+        </div>
+        <div className="star stea9">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+        <div className="decoration con11">
+          <img src="/icons/confetiimaredreapta.png" alt="Decorative" />
+        </div>
+         <div className="decoration con12">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        <div className="star stea10">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+        <div className="decoration con13">
+          <img src="/icons/confetiidreapta.png" alt="Decorative" />
+        </div>
       </div>
+
+       <div className="star stea11">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con14">
+          <img src="/icons/confetiimarestanga.png" alt="Decorative" />
+        </div>
+         <div className="decoration con15">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+
+          <div className="star stea12">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+            <div className="decoration con16">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        
+         <div className="star stea13">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+
+             <div className="decoration con17">
+          <img src="/icons/confetiimaredreapta.png" alt="Decorative" />
+        </div>
+
+             <div className="decoration con18">
+          <img src="/icons/confetiidreapta.png" alt="Decorative" />
+        </div>
+
+            <div className="star stea14">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
 
       <div className="pr-footer-banner"></div>
     </div>

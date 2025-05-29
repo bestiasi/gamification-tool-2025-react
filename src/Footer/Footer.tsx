@@ -28,8 +28,15 @@ const Footer: React.FC<FooterProps> = ({
         {/* Logo și copyright */}
         <div className="footer-branding">
           <div className="footer-logo">
-            {/* Folosim o cale publică pentru logo în loc de import */}
-            <img src="/icons/logo best.png" alt="BEST IAȘI Logo" />
+            {/* Logo cu link către site-ul BEST IAȘI - ca la Header */}
+            <a 
+              href="https://bestis.ro/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="footer-logo-link"
+            >
+              <img src="/icons/logo best.png" alt="BEST IAȘI Logo" />
+            </a>
           </div>
           <p className="footer-copyright-year">
             {yearText}

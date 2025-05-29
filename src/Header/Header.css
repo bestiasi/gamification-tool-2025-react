@@ -27,11 +27,31 @@
 .logo-container {
   display: flex;
   align-items: center;
+  padding-right: 300px; /* Un mic padding pentru a nu fi lipit complet de margine */
 }
 
 .logo {
-  height: 55px; /* Logo mai mare */
+  height: 75px; /* Mărește de la valoarea actuală */
   width: auto;
+  filter: brightness(1.1);
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.logo-link {
+  display: block;
+  line-height: 0; /* Previne spațiul nedorit sub imagine */
+  text-decoration: none; /* Elimină sublinierea */
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* HOVER EFFECTS CA LA FOOTER - IDENTICE */
+.logo-link:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.logo-link:hover .logo {
+  filter: brightness(1.3);
 }
 
 .desktop-nav {
@@ -155,7 +175,7 @@
 }
 
 .mobile-nav-links a {
-text-decoration: none;
+  text-decoration: none;
   color: #fff;
   font-size: 1.3rem; /* Text mai mare */
   font-weight: 500;
@@ -171,41 +191,10 @@ text-decoration: none;
 }
 
 .mobile-nav-links a:hover {
-color: #FFCC33;
+  color: #FFCC33;
   background-color: #2a2a2a;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .desktop-nav {
-    display: none;
-  }
-  
-  .mobile-menu-button {
-    display: block;
-  }
-  
-  .mobile-nav {
-    display: block;
-  }
-  
-  .header {
-    padding: 0.5rem 1rem;
-  }
-  
-  .logo {
-    height: 40px;
-  }
-}
-
-/* Asigurare că meniul mobil nu apare pe desktop */
-@media (min-width: 769px) {
-  .mobile-nav {
-    display: none !important;
-    visibility: hidden !important;
-  }
-  
-}
 .mobile-nav-links a.active {
   color: #FFCC33;
 }
@@ -233,32 +222,33 @@ color: #FFCC33;
   transition: width 0.3s ease;
 }
 
-.logo {
-  height: 75px; /* Mărește de la valoarea actuală */
-  width: auto;
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
-  padding-right: 300px; /* Un mic padding pentru a nu fi lipit complet de margine */
-}
-
+/* Responsive design */
 @media (max-width: 768px) {
+  .desktop-nav {
+    display: none;
+  }
+  
+  .mobile-menu-button {
+    display: block;
+  }
+  
+  .mobile-nav {
+    display: block;
+  }
+  
+  .header {
+    padding: 0.5rem 1rem;
+  }
+  
   .logo {
     height: 70px; /* Puțin mai mic pe mobile, dar tot mai mare decât înainte */
   }
 }
 
-.logo-link {
-  display: block;
-  line-height: 0; /* Previne spațiul nedorit sub imagine */
-  text-decoration: none; /* Elimină sublinierea */
+/* Asigurare că meniul mobil nu apare pe desktop */
+@media (min-width: 769px) {
+  .mobile-nav {
+    display: none !important;
+    visibility: hidden !important;
+  }
 }
-
-/* Opțional: Adaugă un efect subtil de hover pe logo */
-.logo-link:hover {
-  opacity: 0.9; /* Fade ușor la hover */
-  transition: opacity 0.2s ease;
-}
-

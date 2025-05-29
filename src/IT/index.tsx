@@ -3,7 +3,7 @@ import '../App.css';
 import './IT.css';
 
 function IT() {
-  // JavaScript pentru hover simultan pe nume și scor ca în imagine
+  // JavaScript pentru hover simultan pe nume și scor ca la PR
   useEffect(() => {
     const table = document.querySelector('.it-table');
     if (!table) return;
@@ -76,7 +76,6 @@ function IT() {
     { name: "Copceanu Lucian", score: 945 },
     { name: "Coman Stefan", score: 1445 },
     { name: "Cozaru Cezara", score: 35 },
-    { name: "Cozminca Smaranda", score: 0 }, // Excluded
     { name: "Craciun Elisaveta", score: 45 },
     { name: "Cusmir Paul", score: 40 },
     { name: "Diaconu Daniel", score: 182 },
@@ -119,25 +118,32 @@ function IT() {
     'CREAZA WEBSITE-UL DE EVENIMENT TURA 2 FB(50P)',
     'REALIZEAZA MOCKUP LA SITE (FIGMA/DESIGNXD) TURA 1 FB(50P)',
     'REALIZEAZA MOCKUP LA SITE (FIGMA/DESIGNXD) TURA 2 FB(25P)',
-    'REALIZEAZA NECESARUL DE LOGISTICA TURA 1 FB(25P)',
-    'REALIZEAZA NECESARUL DE LOGISTICA TURA 2 FB(25P)',
+    'REALIZEAZA NECESSARUL DE LOGISTICA TURA 1 FB(25P)',
+    'REALIZEAZA NECESSARUL DE LOGISTICA TURA 2 FB(25P)',
     'TINUT PV/AI LA UNA DINTRE SEDINTE (10P)',
-'MANAGERIAZA LOGISTICA SI COORDONAREA ECHIPEI TEHNICE ON EVENT(50P)',
-'FACE PARTE DINTR-O ECHIPA TEHNICA ON EVENT(20P)',
-'REALIZEAZA UN RESEARCH DE SALI/LOCATII PENTRU EVENIMENT(30P)',
-'SE OCUPA DE DEZVOLTAREA UNEI CERERI(10P)',
-'LIPSIRA A 10 ANSE IN CAMINE, FACULTATI, CAMPUS SI/SAU SITE(25P)',
-'CREARE NOUL DESIGN AL TRICOU HONOARAR DE DEPARTAMENT(150P)',
-'REALIZEAZA UNI TUTORUI (GOOGLE ANALYTICS/URL BUILDER ETC) (100P)',
-'PARTICIPARE LA O ACTIVITATE PE DEPARTAMENT (REACT/WORDPRESS) (10P)',
-'REALIZEAZA UNUI MENTORAT/WS/TRAINING PE IT (250P) ',
+    'MANAGERIAZA LOGISTICA SI COORDONAREA ECHIPEI TEHNICE ON EVENT(50P)',
+    'FACE PARTE DINTR-O ECHIPA TEHNICA ON EVENT(20P)',
+    'REALIZEAZA UN RESEARCH DE SALI/LOCATII PENTRU EVENIMENT(30P)',
+    'SE OCUPA DE DEZVOLTAREA UNEI CERERI(10P)',
+    'LIPSIRA A 10 ANSE IN CAMINE, FACULTATI, CAMPUS SI/SAU SITE(25P)',
+    'CREARE NOUL DESIGN AL TRICOU HONOARAR DE DEPARTAMENT(150P)',
+    'REALIZEAZA UNI TUTORUI (GOOGLE ANALYTICS/URL BUILDER ETC) (100P)',
+    'PARTICIPARE LA O ACTIVITATE PE DEPARTAMENT (REACT/WORDPRESS) (10P)',
+    'REALIZEAZA UNUI MENTORAT/WS/TRAINING PE IT (250P)'
   ];
 
   return (
     <div className="it-page">
       <div className="it-top-banner">
         <div className="icon-container">
-          💻 {/* Iconiță specifică pentru IT */}
+          <img 
+            src="/icons/logoIT.png"
+            alt="IT Manager" 
+            style={{
+              width: '70px', 
+              height: '70px', 
+            }}
+          />
         </div>
         <h1>PUNCTAJ ANUAL IT</h1>
       </div>
@@ -147,7 +153,7 @@ function IT() {
           <table className="it-table">
             <thead>
               <tr>
-                <th className="name-column">NUME ȘI PRENUME BESTIAN</th>
+                <th className="name-column">NUME ȘI PRENUME BESTAN</th>
                 <th className="score-column">PUNCTAJ TOTAL</th>
                 <th className="task-column">PUNCTAJ FIECARE TASK</th>
               </tr>
@@ -176,21 +182,123 @@ function IT() {
         </div>
       </div>
 
-      {/* Elemente decorative ca în imagine */}
       <div className="decorative-elements">
-        <div className="star star-1">⭐</div>
-        <div className="star star-2">✨</div>
-        <div className="star star-3">⭐</div>
-        <div className="star star-4">✨</div>
-        <div className="star star-5">⭐</div>
-        <div className="star star-6">✨</div>
+        {/* STÂNGA -  */}
+        <div className="star stea1">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con1">
+          <img src="/icons/confetiistanga.png" alt="Decorative" />
+        </div>
+        <div className="star stea2">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con2">
+          <img src="/icons/confetiimarestanga.png" alt="Decorative" />
+        </div>
+         <div className="decoration con3">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        <div className="star stea3">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con4">
+          <img src="/icons/confetiistanga.png" alt="Decorative" />
+        </div>
         
-        <div className="decoration decoration-1">💫</div>
-        <div className="decoration decoration-2">🌟</div>
-        <div className="decoration decoration-3">💫</div>
-        <div className="decoration decoration-4">🌟</div>
-        <div className="decoration decoration-5">💫</div>
+         <div className="star stea4">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con5">
+          <img src="/icons/confetiimarestanga.png" alt="Decorative" />
+        </div>
+         <div className="decoration con6">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        
+
+         <div className="star stea5">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+            <div className="decoration con7">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        
+         <div className="star stea6">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+
+             <div className="decoration con8">
+          <img src="/icons/confetiimarestanga.png" alt="Decorative" />
+        </div>
+
+               <div className="star stea7">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+        
+
+             <div className="decoration con9">
+          <img src="/icons/confetiistanga.png" alt="Decorative" />
+        </div>
+
+        
+        
+        {/* DREAPTA - */}
+        <div className="star stea8">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+        <div className="decoration con10">
+          <img src="/icons/confetiidreapta.png" alt="Decorative" />
+        </div>
+        <div className="star stea9">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+        <div className="decoration con11">
+          <img src="/icons/confetiimaredreapta.png" alt="Decorative" />
+        </div>
+         <div className="decoration con12">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        <div className="star stea10">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+        <div className="decoration con13">
+          <img src="/icons/confetiidreapta.png" alt="Decorative" />
+        </div>
       </div>
+
+       <div className="star stea11">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+        <div className="decoration con14">
+          <img src="/icons/confetiimarestanga.png" alt="Decorative" />
+        </div>
+         <div className="decoration con15">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+
+          <div className="star stea12">
+          <img src="/icons/steastanga.png" alt="Decorative" />
+        </div>
+            <div className="decoration con16">
+          <img src="/icons/confetiisimplu.png" alt="Decorative" />
+        </div>
+        
+         <div className="star stea13">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
+
+             <div className="decoration con17">
+          <img src="/icons/confetiimaredreapta.png" alt="Decorative" />
+        </div>
+
+             <div className="decoration con18">
+          <img src="/icons/confetiidreapta.png" alt="Decorative" />
+        </div>
+
+            <div className="star stea14">
+          <img src="/icons/steadreapta.png" alt="Decorative" />
+        </div>
 
       <div className="it-footer-banner"></div>
     </div>
