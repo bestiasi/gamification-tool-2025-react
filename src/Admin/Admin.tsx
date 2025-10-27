@@ -79,7 +79,6 @@ function Admin() {
   const [newTaskDesc, setNewTaskDesc] = useState('');
   const [newTaskPoints, setNewTaskPoints] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Transfer tab state
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -258,18 +257,15 @@ function Admin() {
       const fetchedTasks: Task[] = [];
       
       querySnapshot.forEach((doc) => {
-        fetchedTasks.push({ id: doc.id, ...doc.data() } as Task);
-      });
+      fetchedTasks.push({ id: doc.id, ...doc.data() } as Task);
+    });
 
-      fetchedTasks.sort((a, b) => b.points - a.points);
-      setTasks(fetchedTasks);
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    }
-  };
-
-  const handleAddTask = async (e: React.FormEvent) => {
+    fetchedTasks.sort((a, b) => b.points - a.points);
+    setTasks(fetchedTasks);
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+  }
+};  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newTaskDesc.trim() || newTaskPoints <= 0) {

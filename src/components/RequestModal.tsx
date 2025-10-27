@@ -21,7 +21,7 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
   const [eventDate, setEventDate] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [_selectedDay, setSelectedDay] = useState<number | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string>('');
   const [taskNumber, setTaskNumber] = useState('');
@@ -142,19 +142,6 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
   const handleNext = () => {
     if (currentStep === 'date' && eventDate) setCurrentStep('proof');
     else if (currentStep === 'proof' && proofFile) setCurrentStep('details');
-  };
-
-  const getAcademicYearStart = () => {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth(); // 0-11
-    
-    // If we're before September (month 8), academic year started last year
-    if (currentMonth < 8) {
-      return `${currentYear - 1}-09-01`;
-    }
-    // If we're September or later, academic year started this year
-    return `${currentYear}-09-01`;
   };
 
   const getAvailableMonths = () => {
