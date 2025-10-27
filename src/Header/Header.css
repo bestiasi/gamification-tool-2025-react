@@ -1,3 +1,8 @@
+:root {
+  --header-height: 120px;
+  --header-scrolled-height: 80px;
+}
+
 .header {
   position: fixed;
   top: 0;
@@ -8,12 +13,14 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
   z-index: 1000;
+  height: var(--header-height);
 }
 
 .header-scrolled {
   padding: 0.5rem 2rem;
   background-color: #212121;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  height: var(--header-scrolled-height);
 }
 
 .header-container {
@@ -262,4 +269,38 @@
   .mobile-nav-overlay {
     display: none !important;
   }
+}
+
+/* Logout button */
+.logout-button {
+  background: transparent;
+  border: 2px solid #FFCC33;
+  color: #FFCC33;
+  padding: 8px 20px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+  background: #FFCC33;
+  color: #212121;
+  transform: translateY(-2px);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+}
+
+/* Mobile logout button */
+.mobile-nav-links .logout-button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 20px;
+  font-size: 1.6rem;
+  text-align: center;
 }

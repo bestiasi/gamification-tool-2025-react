@@ -49,6 +49,39 @@
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Department Tabs */
+.department-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto 20px auto;
+  width: 90%;
+  max-width: 1200px;
+}
+
+.department-tabs .tab-btn {
+  padding: 12px 30px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #FFCC33;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.department-tabs .tab-btn:hover {
+  background: rgba(255, 204, 51, 0.2);
+  transform: translateY(-2px);
+}
+
+.department-tabs .tab-btn.active {
+  background: #FFCC33;
+  color: #222;
+  box-shadow: 0 4px 12px rgba(255, 204, 51, 0.4);
+}
+
 /* Content Area */
 .it-content {
   flex: 1;

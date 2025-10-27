@@ -1,14 +1,143 @@
-import { useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import '../App.css';
 import './HR.css';
 
+interface UserPoints {
+  name: string;
+  email: string;
+  totalPoints: number;
+  tasks: Array<{task: string; points: number}>;
+}
+
+interface DepartmentTask {
+  id: string;
+  department: string;
+  description: string;
+  points: number;
+}
+
 function HR() {
-  // JavaScript pentru hover simultan pe nume și scor ca la PR
+  const [tableData, setTableData] = useState<UserPoints[]>([]);
+  const [departmentTasks, setDepartmentTasks] = useState<DepartmentTask[]>([]);
+  const [activeTab, setActiveTab] = useState<'activity' | 'tasks'>('activity');
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data from Firestore
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch leaderboard with tasks
+        const leaderboardQuery = query(
+          collection(db, 'pointRequests'),
+          where('department', '==', 'HR'),
+          where('status', '==', 'approved')
+        );
+
+        const leaderboardSnapshot = await getDocs(leaderboardQuery);
+        const pointsMap = new Map<string, UserPoints>();
+
+        leaderboardSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const userEmail = data.userEmail;
+          const userName = data.userName;
+          const task = data.task || 'Task nespecificat';
+          
+          if (pointsMap.has(userEmail)) {
+            const existing = pointsMap.get(userEmail)!;
+            existing.totalPoints += 1;
+            existing.tasks.push({ task, points: 1 });
+          } else {
+            pointsMap.set(userEmail, {
+              name: userName,
+              email: userEmail,
+              totalPoints: 1,
+              tasks: [{ task, points: 1 }]
+            });
+          }
+        });
+
+        const leaderboardData = Array.from(pointsMap.values())
+          .filter(user => user.totalPoints > 0)
+          .sort((a, b) => b.totalPoints - a.totalPoints);
+
+        setTableData(leaderboardData);
+
+        // Fetch department tasks
+        const tasksQuery = query(
+          collection(db, 'departmentTasks'),
+          where('department', '==', 'HR')
+        );
+
+        const tasksSnapshot = await getDocs(tasksQuery);
+        const tasks: DepartmentTask[] = [];
+
+        tasksSnapshot.forEach((doc) => {
+          tasks.push({
+            id: doc.id,
+            ...doc.data()
+          } as DepartmentTask);
+        });
+
+        setDepartmentTasks(tasks);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Mouse-interactive decorations
+  useEffect(() => {
+    const decorations = document.querySelectorAll('.star, .decoration');
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      
+      decorations.forEach((decoration) => {
+        const rect = decoration.getBoundingClientRect();
+        const decorationX = rect.left + rect.width / 2;
+        const decorationY = rect.top + rect.height / 2;
+        
+        const deltaX = mouseX - decorationX;
+        const deltaY = mouseY - decorationY;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        // Push away from cursor with smooth falloff
+        const maxDistance = 300;
+        if (distance < maxDistance) {
+          const force = (maxDistance - distance) / maxDistance;
+          const pushX = -(deltaX / distance) * force * 40;
+          const pushY = -(deltaY / distance) * force * 40;
+          const rotation = force * 15 * (deltaX > 0 ? 1 : -1);
+          const scale = 1 + force * 0.3;
+          
+          (decoration as HTMLElement).style.transform = `translate(${pushX}px, ${pushY}px) rotate(${rotation}deg) scale(${scale})`;
+          (decoration as HTMLElement).style.transition = 'transform 0.3s ease-out';
+        } else {
+          (decoration as HTMLElement).style.transform = '';
+          (decoration as HTMLElement).style.transition = 'transform 0.6s ease-out';
+        }
+      });
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [tableData]);
+
+  // JavaScript pentru hover simultan pe nume și scor
   useEffect(() => {
     const table = document.querySelector('.hr-table');
     if (!table) return;
     
-    // Găsește toate rândurile din tabel
     const rows = table.querySelectorAll('tbody tr');
     const eventListeners: Array<{element: Element, event: string, handler: () => void}> = [];
     
@@ -18,27 +147,21 @@ function HR() {
       
       if (!nameCell || !scoreCell) return;
       
-      // Funcție pentru a adăuga hover simultan pe nume și scor
       const addSimultaneousHover = () => {
         nameCell.classList.add('js-hover');
         scoreCell.classList.add('js-hover');
       };
       
-      // Funcție pentru a elimina hover simultan
       const removeSimultaneousHover = () => {
         nameCell.classList.remove('js-hover');
         scoreCell.classList.remove('js-hover');
       };
       
-      // Event listeners pentru nume
       nameCell.addEventListener('mouseenter', addSimultaneousHover);
       nameCell.addEventListener('mouseleave', removeSimultaneousHover);
-      
-      // Event listeners pentru scor
       scoreCell.addEventListener('mouseenter', addSimultaneousHover);
       scoreCell.addEventListener('mouseleave', removeSimultaneousHover);
       
-      // Salvează referințele pentru cleanup
       eventListeners.push(
         {element: nameCell, event: 'mouseenter', handler: addSimultaneousHover},
         {element: nameCell, event: 'mouseleave', handler: removeSimultaneousHover},
@@ -47,136 +170,141 @@ function HR() {
       );
     });
 
-    // Cleanup function pentru a elimina event listeners
     return () => {
       eventListeners.forEach(({element, event, handler}) => {
         element.removeEventListener(event, handler);
       });
     };
-  }, []); // Se execută o dată când componenta se încarcă
+  }, [tableData]);
 
-  // Datele pentru tabelul HR din imagini - în ordinea exactă (exclud cei cu 0 puncte)
-  const tableData = [
-    { name: "Achitei Alexandru", score: 150 },
-    { name: "Alupului Diana", score: 50 },
-    { name: "Andrei Alexandru-Marian", score: 100 },
-    { name: "Andronache Codrina", score: 300 },
-    { name: "Azoltei Cristina", score: 2190 },
-    { name: "Bacaita Roxana", score: 150 },
-    { name: "Barcan Nicoleta", score: 150 },
-    { name: "Biciusca Rares", score: 75 },
-    { name: "Busaga Maria", score: 500 },
-    { name: "Butacu Catalin", score: 725 },
-    { name: "Caba Andrei", score: 700 },
-    { name: "Caprian Denisa", score: 725 },
-    { name: "Ciobanu Ana-Maria", score: 125 },
-    { name: "Coman Stefan", score: 50 },
-    { name: "Cozaru Cezara", score: 490 },
-    { name: "Cozminca Smaranda", score: 350 },
-    { name: "Craciun Elisaveta", score: 415 },
-    { name: "Cusmir Paul", score: 125 },
-    { name: "Dascalu Laura", score: 200 },
-    { name: "Diaconu Daniel", score: 325 },
-    { name: "Ghurea Andrei", score: 75 },
-    { name: "Lupu Cosette Ioana", score: 400 },
-    { name: "Matei Stefan-Cristian", score: 100 },
-    { name: "Miron Smaranda-Gabriela", score: 400 },
-    { name: "Miron Xenia", score: 50 },
-    { name: "Morosanu George (florhe)", score: 200 },
-    { name: "Petrisor Edi", score: 150 },
-    { name: "Pintiuc Ana Rebeca", score: 500 },
-    { name: "Plugaru Paraschiva (Coca)", score: 150 },
-    { name: "Rachieru Lavinia", score: 250 },
-    { name: "Rotaru Irina", score: 200 },
-    { name: "Simionescu Edmond", score: 150 },
-    { name: "Spinu Ioana Teodora", score: 75 },
-    { name: "Stefan-Vladut Radu", score: 565 },
-    { name: "Stircia Bogdan", score: 65 },
-    { name: "Tudorache Afrodita", score: 700 },
-    { name: "Turceac Tiberiu", score: 100 },
-    { name: "Vacarciuc Alexandru", score: 400 },
-    { name: "Varga Matteo", score: 15 },
-    { name: "Yasmeen", score: 50 },
-    { name: "Zarnica Alexandru", score: 615 }
-  ].filter(person => person.score > 0); // Exclud automat cei cu 0 puncte
-
-  // Task-urile specifice pentru HR din imaginile furnizate
-  const tasksData = [
-    'AI O RESPONSABILITATE PE DEPARTAMENT (ECHIPE, SECRETAR, BECAS, BEST MOOD) (150P)',
-    'ORGANIZEZI O ACTIVITATE DE FUN (100P)',
-    'FACI PARTE DIN ECHIPA DE ACTIVITĂȚI (50P)',
-    'PARTICIPI LA O ACTIVITATE DE FUN (15P)',
-    'ORGANIZEZI UN TEAMBUILDING (100P)',
-    'FACILITEZI UN TEAMBUILDING (200P)',
-    'PARTICIPI LA UN TEAMBUILDING (50P)',
-    'FACI PARTE DIN CLUBUL DE LECTURA ACTIV (50P)',
-    'PARTICIPI LA O ÎNTÂLNIRE A CLUBULUI DE LECTURA (15P)',
-    'REALIZEZI UN FORMULAR DE FEEDBACK (150P)',
-    'COMPLETEZI 3 FORMULARE DE FEEDBACK (100P/3 FORMULARE)',
-    'CREEZI UN TOOL DE MONITORIZARE (75P)',
-    'FACILITEZI SI ORGANIZEZI UN TRAINING/MENTORIAT HR (250P)',
-    'PARTICIPI LA UN TRAINING/BKT/MENTORAT HR (50P)',
-    'PARTICIPI LA ADVERSARE (50P)',
-    'PARTICIPI ACTIV LA RECRUTARI (INTERVIUATOR, OBSERVER, PROMO CAMINE, GRĂSELI ETC.) (75P)',
-    'EȘTI PARINTE (150P)',
-    'RESPONSABIL TCOTO (75P)',
-    'RESP. MEME-URI (75P)',
-    'TASK ON-EVENT (WAKE-UP, BAR, CHECK IN ETC) (15/TASK)',
-    'REALIZEZI UN FORMULAR DE AȘTEPTĂRI (100P)'
-  ];
+  if (loading) {
+    return (
+      <div className="hr-page">
+        <div className="hr-top-banner">
+          <img 
+            src="/icons/logoHR.png"
+            alt="HR Logo" 
+            style={{
+              width: '70px', 
+              height: '70px',
+              marginRight: '20px'
+            }}
+          />
+          <h1>PUNCTAJ ANUAL HR</h1>
+        </div>
+        <div className="hr-content">
+          <p style={{textAlign: 'center', color: 'white', fontSize: '24px'}}>Se încarcă...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="hr-page">
       <div className="hr-top-banner">
-        <div className="icon-container">
-          <img 
-            src="/icons/logoHR.png"
-            alt="HR Manager" 
-            style={{
-              width: '70px', 
-              height: '70px', 
-            }}
-          />
-        </div>
+        <img 
+          src="/icons/logoHR.png"
+          alt="HR Logo" 
+          style={{
+            width: '70px', 
+            height: '70px',
+            marginRight: '20px'
+          }}
+        />
         <h1>PUNCTAJ ANUAL HR</h1>
       </div>
 
+      {/* Tabs */}
+      <div className="department-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'activity' ? 'active' : ''}`}
+          onClick={() => setActiveTab('activity')}
+        >
+          📊 Activitate Utilizatori
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tasks')}
+        >
+          📋 Task-uri Disponibile
+        </button>
+      </div>
+
       <div className="hr-content">
-        <div className="hr-table-container">
-          <table className="hr-table">
-            <thead>
-              <tr>
-                <th className="name-column">NUME ȘI PRENUME BESTAN</th>
-                <th className="score-column">PUNCTAJ TOTAL</th>
-                <th className="task-column">PUNCTAJ FIECARE TASK</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((person, index) => (
-                <tr key={index} className={index % 2 === 0 ? "row-light" : "row-dark"}>
-                  <td className="name-column">{person.name}</td>
-                  <td className="score-column">{person.score}</td>
-                  {index === 0 && (
-                    <td rowSpan={tableData.length} className="task-column">
-                      <div className="task-text-large">
-                        {tasksData.map((task, taskIndex) => (
-                          <span key={taskIndex}>
-                            <strong>{task}</strong>
-                            {taskIndex < tasksData.length - 1 && <><br /><br /></>}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                  )}
+        {activeTab === 'activity' ? (
+          <div className="hr-table-container">
+            <table className="hr-table">
+              <thead>
+                <tr>
+                  <th className="name-column">NUME ȘI PRENUME BESTAN</th>
+                  <th className="score-column">PUNCTAJ TOTAL</th>
+                  <th className="task-column">TASK-URI COMPLETATE</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {tableData.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} style={{textAlign: 'center', padding: '40px', color: 'white'}}>
+                      Nu există date disponibile
+                    </td>
+                  </tr>
+                ) : (
+                  tableData.map((person, index) => (
+                    <tr key={person.email} className={index % 2 === 0 ? "row-light" : "row-dark"}>
+                      <td className="name-column">{person.name}</td>
+                      <td className="score-column">{person.totalPoints}</td>
+                      <td className="task-column">
+                        <div className="task-text-large">
+                          {person.tasks.map((taskItem, taskIndex) => (
+                            <span key={taskIndex}>
+                              <strong>{taskItem.task} ({taskItem.points}P)</strong>
+                              {taskIndex < person.tasks.length - 1 && <><br /><br /></>}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="hr-table-container">
+            <table className="hr-table">
+              <thead>
+                <tr>
+                  <th className="task-column">DESCRIERE TASK</th>
+                  <th className="score-column">PUNCTE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {departmentTasks.length === 0 ? (
+                  <tr>
+                    <td colSpan={2} style={{textAlign: 'center', padding: '40px', color: 'white'}}>
+                      Nu există task-uri disponibile
+                    </td>
+                  </tr>
+                ) : (
+                  departmentTasks.map((task, index) => (
+                    <tr key={task.id} className={index % 2 === 0 ? "row-light" : "row-dark"}>
+                      <td className="task-column">
+                        <div className="task-text-large">
+                          <strong>{task.description}</strong>
+                        </div>
+                      </td>
+                      <td className="score-column">{task.points}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="decorative-elements">
-        {/* STÂNGA -  */}
+        {/* STÂNGA */}
         <div className="star stea1">
           <img src="/icons/steastanga.png" alt="Decorative" />
         </div>
@@ -198,8 +326,7 @@ function HR() {
         <div className="decoration con4">
           <img src="/icons/confetiistanga.png" alt="Decorative" />
         </div>
-        
-         <div className="star stea4">
+        <div className="star stea4">
           <img src="/icons/steastanga.png" alt="Decorative" />
         </div>
         <div className="decoration con5">
@@ -208,35 +335,26 @@ function HR() {
          <div className="decoration con6">
           <img src="/icons/confetiisimplu.png" alt="Decorative" />
         </div>
-        
-
-         <div className="star stea5">
+        <div className="star stea5">
           <img src="/icons/steastanga.png" alt="Decorative" />
         </div>
-            <div className="decoration con7">
+        <div className="decoration con7">
           <img src="/icons/confetiisimplu.png" alt="Decorative" />
         </div>
-        
-         <div className="star stea6">
+        <div className="star stea6">
           <img src="/icons/steastanga.png" alt="Decorative" />
         </div>
-
-             <div className="decoration con8">
+        <div className="decoration con8">
           <img src="/icons/confetiimarestanga.png" alt="Decorative" />
         </div>
-
-               <div className="star stea7">
+        <div className="star stea7">
           <img src="/icons/steadreapta.png" alt="Decorative" />
         </div>
-        
-
-             <div className="decoration con9">
+        <div className="decoration con9">
           <img src="/icons/confetiistanga.png" alt="Decorative" />
         </div>
-
         
-        
-        {/* DREAPTA - */}
+        {/* DREAPTA */}
         <div className="star stea8">
           <img src="/icons/steadreapta.png" alt="Decorative" />
         </div>
@@ -258,9 +376,7 @@ function HR() {
         <div className="decoration con13">
           <img src="/icons/confetiidreapta.png" alt="Decorative" />
         </div>
-      </div>
-
-       <div className="star stea11">
+        <div className="star stea11">
           <img src="/icons/steastanga.png" alt="Decorative" />
         </div>
         <div className="decoration con14">
@@ -269,29 +385,25 @@ function HR() {
          <div className="decoration con15">
           <img src="/icons/confetiisimplu.png" alt="Decorative" />
         </div>
-
-          <div className="star stea12">
+        <div className="star stea12">
           <img src="/icons/steastanga.png" alt="Decorative" />
         </div>
-            <div className="decoration con16">
+        <div className="decoration con16">
           <img src="/icons/confetiisimplu.png" alt="Decorative" />
         </div>
-        
-         <div className="star stea13">
+        <div className="star stea13">
           <img src="/icons/steadreapta.png" alt="Decorative" />
         </div>
-
-             <div className="decoration con17">
+        <div className="decoration con17">
           <img src="/icons/confetiimaredreapta.png" alt="Decorative" />
         </div>
-
-             <div className="decoration con18">
+        <div className="decoration con18">
           <img src="/icons/confetiidreapta.png" alt="Decorative" />
         </div>
-
-            <div className="star stea14">
+        <div className="star stea14">
           <img src="/icons/steadreapta.png" alt="Decorative" />
         </div>
+      </div>
 
       <div className="hr-footer-banner"></div>
     </div>

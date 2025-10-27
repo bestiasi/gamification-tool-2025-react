@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom'; // Adăugăm importurile pentru React Router
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase/config';
+import { useAuth } from '../contexts/AuthContext';
 import './Header.css';
 
 interface HeaderProps {
@@ -10,17 +13,19 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ 
 logo = "/icons/logo best.png",
   links = [
-    { text: 'HR', url: '/hr' }, // Schimbăm URL-urile pentru a folosi React Router
+    { text: 'HR', url: '/hr' },
     { text: 'PR', url: '/pr' },
     { text: 'IT', url: '/it' },
     { text: 'FR', url: '/fr' },
-    { text: 'GLOBAL', url: '/global' },
-    { text: 'ACASA', url: '/', active: true }
+    { text: 'MY REQUESTS', url: '/my-requests' },
+    { text: 'ADMIN', url: '/admin' }
   ] 
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation(); // Hook pentru a obține locația curentă
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -36,6 +41,16 @@ logo = "/icons/logo best.png",
       return location.pathname === '/';
     }
     return location.pathname.startsWith(url);
+  };
+  
+  // Logout function
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
   
   return (
@@ -66,6 +81,17 @@ logo = "/icons/logo best.png",
                 </Link>
               </li>
             ))}
+            {user && (
+              <li>
+                <button 
+                  onClick={handleLogout}
+                  className="logout-button"
+                  title="Logout"
+                >
+                  LOGOUT
+                </button>
+              </li>
+            )}
           </ul>
         </nav>
         
@@ -96,6 +122,19 @@ logo = "/icons/logo best.png",
                 </Link>
               </li>
             ))}
+            {user && (
+              <li>
+                <button 
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="logout-button"
+                >
+                  LOGOUT
+                </button>
+              </li>
+            )}
           </ul>
         </nav>
       </div>

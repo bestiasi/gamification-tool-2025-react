@@ -1,0 +1,191 @@
+.transfer-page {
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
+  padding: 40px 20px;
+  padding-top: calc(var(--header-height) * 1.5);
+  margin-top: 0;
+}
+
+.transfer-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.transfer-content {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border: 3px solid #2c3e50;
+  backdrop-filter: blur(10px);
+}
+
+.transfer-content h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  text-align: center;
+  background: linear-gradient(135deg, #f7a113 0%, #016fb4 50%, #71ba20 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.transfer-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 30px 0 15px 0;
+}
+
+.transfer-subtitle {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.transfer-form {
+  margin-top: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.transfer-input,
+.transfer-select {
+  width: 100%;
+  padding: 15px 20px;
+  border: 3px solid #2c3e50;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: white;
+  color: #2c3e50;
+  transition: all 0.3s ease;
+}
+
+.transfer-select option {
+  color: #2c3e50;
+  background: white;
+}
+
+.transfer-input:focus,
+.transfer-select:focus {
+  outline: none;
+  border-color: #016fb4;
+  box-shadow: 0 2px 8px rgba(1, 111, 180, 0.2);
+}
+
+.transfer-button {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #f7a113 0%, #016fb4 50%, #71ba20 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.transfer-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(247, 161, 19, 0.4);
+}
+
+.transfer-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.transfer-error {
+  background: #ff4444;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin: 15px 0;
+}
+
+.transfer-success {
+  background: #71ba20;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin: 15px 0;
+}
+
+.incoming-transfers,
+.pending-transfers {
+  margin-top: 30px;
+}
+
+.transfer-card {
+  background: white;
+  border: 3px solid #2c3e50;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.transfer-card p {
+  margin: 8px 0;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.accept-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #71ba20 0%, #5a9a1a 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.accept-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(113, 186, 32, 0.4);
+}
+
+.accept-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.status-pending {
+  color: #f7a113;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .transfer-content {
+    padding: 25px;
+  }
+
+  .transfer-content h1 {
+    font-size: 2rem;
+  }
+}

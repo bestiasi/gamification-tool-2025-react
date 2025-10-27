@@ -25,6 +25,10 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* Layout variables */
+  --header-height: 80px;
+  --footer-height: 80px;
 }
 
 /* Fundal galben cu emoji-uri */
@@ -41,7 +45,7 @@ body {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding-top: 80px; /* Ajustează în funcție de înălțimea header-ului */
+  padding-top: var(--header-height);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
