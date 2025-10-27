@@ -162,7 +162,19 @@ function Request() {
                 ) : loadingTasks ? (
                   <p className="info-text">Se încarcă task-urile...</p>
                 ) : departmentTasks.length === 0 ? (
-                  <p className="info-text">Nu există task-uri disponibile pentru acest departament.</p>
+                  <div className="info-text" style={{ 
+                    padding: '20px', 
+                    background: '#fff3cd', 
+                    border: '1px solid #ffc107',
+                    borderRadius: '8px',
+                    color: '#856404'
+                  }}>
+                    <strong>⚠️ Nu există task-uri disponibile pentru departamentul {selectedDepartment}.</strong>
+                    <br /><br />
+                    Un admin trebuie să adauge task-uri pentru acest departament în panoul de administrare.
+                    <br /><br />
+                    <em>Dacă ești admin, mergi la Admin Panel → Tasks → Selectează {selectedDepartment} → Adaugă Task Nou</em>
+                  </div>
                 ) : (
                   <div className="task-list">
                     {departmentTasks.map((task) => (

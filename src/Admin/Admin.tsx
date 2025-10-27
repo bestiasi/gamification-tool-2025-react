@@ -8,7 +8,6 @@ import {
   doc, 
   updateDoc,
   getDoc,
-  orderBy,
   addDoc,
   deleteDoc,
   serverTimestamp,
@@ -196,10 +195,10 @@ function Admin() {
   // ========== REQUESTS TAB FUNCTIONS ==========
   const fetchRequests = async () => {
     try {
+      // Temporary: Remove orderBy until index is fully built
       let q = query(
         collection(db, 'pointRequests'),
-        where('status', '==', selectedStatus),
-        orderBy('createdAt', 'desc')
+        where('status', '==', selectedStatus)
       );
 
       const querySnapshot = await getDocs(q);
@@ -209,7 +208,15 @@ function Admin() {
         fetchedRequests.push({ id: doc.id, ...doc.data() } as PointRequest);
       });
 
+      // Sort on client side instead
+      fetchedRequests.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
       setRequests(fetchedRequests);
+      console.log('✅ Admin fetched requests:', fetchedRequests.length);
     } catch (error) {
       console.error('Error fetching requests:', error);
     }

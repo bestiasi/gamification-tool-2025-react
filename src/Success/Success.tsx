@@ -12,7 +12,7 @@ function Success() {
           
           <button 
             className="success-button"
-            onClick={() => navigate('/request')}
+            onClick={() => navigate('/my-requests')}
           >
             MAI ADAUGA PUNCTE
           </button>

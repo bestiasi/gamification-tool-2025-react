@@ -4,8 +4,9 @@ import {
   collection, 
   query, 
   where, 
-  getDocs, 
-  orderBy
+  getDocs,
+  doc,
+  updateDoc
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import RequestModal from '../components/RequestModal';
@@ -22,7 +23,7 @@ interface PointRequest {
   proofUrl?: string;
   taskNumber: string | null;
   details: string | null;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   createdAt: any;
   reviewedBy?: string;
   reviewedAt?: any;
@@ -45,10 +46,11 @@ function MyRequests() {
     if (!user?.uid) return;
 
     try {
+      // Temporary: Remove orderBy until index is fully built
+      // Once index is ready, add back: orderBy('createdAt', 'desc')
       const q = query(
         collection(db, 'pointRequests'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', user.uid)
       );
 
       const querySnapshot = await getDocs(q);
@@ -58,7 +60,15 @@ function MyRequests() {
         fetchedRequests.push({ id: doc.id, ...doc.data() } as PointRequest);
       });
 
+      // Sort on client side instead
+      fetchedRequests.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
       setRequests(fetchedRequests);
+      console.log('✅ Fetched requests:', fetchedRequests.length);
     } catch (error) {
       console.error('Error fetching requests:', error);
     } finally {
@@ -78,6 +88,8 @@ function MyRequests() {
         return <span className="status-badge status-approved">✅ Aprobat</span>;
       case 'rejected':
         return <span className="status-badge status-rejected">❌ Respins</span>;
+      case 'cancelled':
+        return <span className="status-badge status-cancelled">🚫 Anulat</span>;
       default:
         return null;
     }
@@ -85,6 +97,25 @@ function MyRequests() {
 
   const getStatusCount = (status: string) => {
     return requests.filter(req => req.status === status).length;
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    if (!confirm('Ești sigur că vrei să anulezi această cerere?')) {
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'pointRequests', requestId), {
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        cancelledBy: user?.email
+      });
+
+      fetchMyRequests();
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      alert('Eroare la anularea cererii. Te rog încearcă din nou.');
+    }
   };
 
   const handleModalSuccess = () => {
@@ -148,6 +179,7 @@ function MyRequests() {
               <option value="pending">În așteptare ({getStatusCount('pending')})</option>
               <option value="approved">Aprobate ({getStatusCount('approved')})</option>
               <option value="rejected">Respinse ({getStatusCount('rejected')})</option>
+              <option value="cancelled">Anulate ({getStatusCount('cancelled')})</option>
             </select>
           </div>  
 
@@ -202,6 +234,17 @@ function MyRequests() {
                       </p>
                     )}
                   </div>
+                  
+                  {request.status === 'pending' && (
+                    <div className="request-actions">
+                      <button
+                        className="cancel-request-btn"
+                        onClick={() => handleCancelRequest(request.id)}
+                      >
+                        🚫 Anulează Cererea
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))
             )}

@@ -4,14 +4,13 @@ import Header from './Header';
 import Footer from './Footer';
 import Login from './Login/Login';
 import Welcome from './Welcome/Welcome';
-import Request from './Request/Request';
 import Success from './Success/Success';
 import Admin from './Admin';
 import AdminTransfer from './AdminTransfer';
 import AdminSetup from './AdminSetup';
 import MyRequests from './MyRequests';
 import ProtectedRoute from './components/ProtectedRoute';
-import App from './App';
+import HomeRedirect from './components/HomeRedirect';
 
 // Import department pages
 import HR from './HR/index.tsx';
@@ -48,17 +47,12 @@ function AppRoutes() {
           <>
             <Route path="/" element={
               <ProtectedRoute>
-                <App />
+                <HomeRedirect />
               </ProtectedRoute>
             } />
             <Route path="/welcome" element={
               <ProtectedRoute>
                 <Welcome />
-              </ProtectedRoute>
-            } />
-            <Route path="/request" element={
-              <ProtectedRoute>
-                <Request />
               </ProtectedRoute>
             } />
             <Route path="/success" element={

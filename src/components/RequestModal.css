@@ -49,6 +49,16 @@
   transform: rotate(90deg);
 }
 
+.modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-close:disabled:hover {
+  background: #ff4444;
+  transform: none;
+}
+
 .modal-header {
   padding: 30px 30px 20px 30px;
   border-bottom: 2px solid #f0f0f0;
@@ -174,7 +184,7 @@
 
 .task-btn:hover {
   background: #f5f5f5;
-  transform: translateX(5px);
+  border-color: #f7a113;
 }
 
 .task-btn.selected {
@@ -620,6 +630,75 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Success Screen */
+.success-screen {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.success-icon {
+  font-size: 5rem;
+  margin-bottom: 20px;
+  animation: scaleIn 0.5s ease;
+}
+
+.success-screen h3 {
+  color: #71ba20;
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+}
+
+.success-screen p {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+.success-details {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  text-align: left;
+  border-left: 4px solid #71ba20;
+}
+
+.close-success-btn {
+  margin-top: 20px;
+  padding: 15px 40px;
+  background: linear-gradient(135deg, #f7a113 0%, #016fb4 100%);
+  border: none;
+  border-radius: 50px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(247, 161, 19, 0.4);
+}
+
+.close-success-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(247, 161, 19, 0.6);
+}
+
+.auto-close-text {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

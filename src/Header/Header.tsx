@@ -25,7 +25,7 @@ logo = "/icons/logo best.png",
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -52,6 +52,14 @@ logo = "/icons/logo best.png",
       console.error('Error signing out:', error);
     }
   };
+
+  // Filter links based on admin status
+  const filteredLinks = links.filter(link => {
+    if (link.url === '/admin') {
+      return isAdmin;
+    }
+    return true;
+  });
   
   return (
     <header className={`header ${scrolled ? 'header-scrolled' : ''}`}>
@@ -71,7 +79,7 @@ logo = "/icons/logo best.png",
         {/* Desktop navigation - folosim Link în loc de a */}
         <nav className="desktop-nav">
           <ul className="nav-links">
-            {links.map((link, index) => (
+            {filteredLinks.map((link, index) => (
               <li key={index}>
                 <Link 
                   to={link.url} 
@@ -111,7 +119,7 @@ logo = "/icons/logo best.png",
         {/* Mobile navigation - folosim Link în loc de a */}
         <nav className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
           <ul className="mobile-nav-links">
-            {links.map((link, index) => (
+            {filteredLinks.map((link, index) => (
               <li key={index}>
                 <Link 
                   to={link.url}

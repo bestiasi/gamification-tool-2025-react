@@ -11,7 +11,7 @@ interface RequestModalProps {
   onSuccess: () => void;
 }
 
-type StepType = 'department' | 'task' | 'date' | 'proof' | 'details';
+type StepType = 'department' | 'task' | 'date' | 'proof' | 'details' | 'success';
 
 function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
   const [user] = useAuthState(auth);
@@ -24,7 +24,7 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
   const [_selectedDay, setSelectedDay] = useState<number | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string>('');
-  const [taskNumber, setTaskNumber] = useState('');
+  const [taskNumber, setTaskNumber] = useState('1');
   const [details, setDetails] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,25 +36,33 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
     setSelectedDepartment(dept);
     setSelectedTask('');
     
-    // Fetch tasks from Firestore
+    // Fetch tasks from Firestore departmentTasks collection
     try {
+      console.log('Fetching tasks for department:', dept);
       const tasksQuery = query(
-        collection(db, 'tasks'),
+        collection(db, 'departmentTasks'),
         where('department', '==', dept)
       );
       const tasksSnapshot = await getDocs(tasksQuery);
-      const taskList = tasksSnapshot.docs.map(doc => doc.data().name as string);
-      setTasks(taskList);
+      console.log('Found tasks:', tasksSnapshot.size);
+      
+      const taskList = tasksSnapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log('Task:', data.description, data.points);
+        return `${data.description} (${data.points} puncte)`;
+      });
+      
+      if (taskList.length > 0) {
+        setTasks(taskList);
+      } else {
+        console.warn('No tasks found for department:', dept);
+        setError(`Nu există task-uri disponibile pentru departamentul ${dept}. Un admin trebuie să le adauge.`);
+        setTasks([]);
+      }
     } catch (err) {
       console.error('Error fetching tasks:', err);
-      // Fallback to default tasks if none in database
-      setTasks([
-        'AI O RESPONSABILITATE PE DEPARTAMENT',
-        'PARTICIPI LA O ACTIVITATE',
-        'ORGANIZEZI UN EVENIMENT',
-        'REALIZEZI UN PROIECT',
-        'COLABORARE IN ECHIPA'
-      ]);
+      setError('Eroare la încărcarea task-urilor. Te rog încearcă din nou.');
+      setTasks([]);
     }
     
     setCurrentStep('task');
@@ -87,15 +95,34 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
     setError('');
 
     try {
-      // Upload proof image to Firebase Storage
-      const timestamp = Date.now();
-      const fileName = `proofs/${user?.uid}/${timestamp}_${proofFile.name}`;
-      const storageRef = ref(storage, fileName);
-      await uploadBytes(storageRef, proofFile);
-      const proofUrl = await getDownloadURL(storageRef);
+      console.log('🚀 Starting request submission...');
+      
+      let proofUrl = '';
+      
+      // Try to upload proof image to Firebase Storage with timeout
+      try {
+        console.log('📤 Uploading proof image...');
+        const timestamp = Date.now();
+        const fileName = `proofs/${user?.uid}/${timestamp}_${proofFile.name}`;
+        const storageRef = ref(storage, fileName);
+        
+        // Create upload with 5 second timeout
+        const uploadPromise = uploadBytes(storageRef, proofFile);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Upload timeout')), 5000)
+        );
+        
+        await Promise.race([uploadPromise, timeoutPromise]);
+        proofUrl = await getDownloadURL(storageRef);
+        console.log('✅ Proof uploaded successfully');
+      } catch (storageError) {
+        console.warn('⚠️ Storage upload failed (Storage not enabled yet):', storageError);
+        proofUrl = 'pending-upload'; // Temporary placeholder
+      }
 
       // Add request to Firestore
-      await addDoc(collection(db, 'pointRequests'), {
+      console.log('💾 Saving request to Firestore...');
+      const docRef = await addDoc(collection(db, 'pointRequests'), {
         userId: user?.uid,
         userEmail: user?.email,
         userName: user?.displayName || user?.email?.split('@')[0],
@@ -108,13 +135,20 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
         status: 'pending',
         createdAt: serverTimestamp()
       });
+      console.log('✅ Request saved with ID:', docRef.id);
 
+      // Call success callback to refresh the list
+      console.log('🔄 Refreshing requests list...');
       onSuccess();
+      
+      // Close modal immediately
+      console.log('✨ Closing modal...');
       resetForm();
       onClose();
+      console.log('✅ Request submission complete!');
     } catch (err: any) {
+      console.error('❌ Error submitting request:', err);
       setError('Eroare la trimiterea cererii. Te rog încearcă din nou.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -127,7 +161,7 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
     setEventDate('');
     setProofFile(null);
     setProofPreview('');
-    setTaskNumber('');
+    setTaskNumber('1');
     setDetails('');
     setError('');
   };
@@ -232,19 +266,24 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
 
   if (!isOpen) return null;
 
+  const handleCloseModal = () => {
+    if (loading) return; // Don't close while submitting
+    onClose();
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleCloseModal}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>✕</button>
+        <button className="modal-close" onClick={handleCloseModal} disabled={loading}>✕</button>
         
         <div className="modal-header">
           <h2>📝 Cerere Nouă de Puncte</h2>
           <div className="progress-dots">
             <span className={currentStep === 'department' ? 'active' : 'completed'}>1</span>
-            <span className={currentStep === 'task' ? 'active' : currentStep === 'date' || currentStep === 'proof' || currentStep === 'details' ? 'completed' : ''}>2</span>
-            <span className={currentStep === 'date' ? 'active' : currentStep === 'proof' || currentStep === 'details' ? 'completed' : ''}>3</span>
-            <span className={currentStep === 'proof' ? 'active' : currentStep === 'details' ? 'completed' : ''}>4</span>
-            <span className={currentStep === 'details' ? 'active' : ''}>5</span>
+            <span className={currentStep === 'task' ? 'active' : currentStep === 'date' || currentStep === 'proof' || currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>2</span>
+            <span className={currentStep === 'date' ? 'active' : currentStep === 'proof' || currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>3</span>
+            <span className={currentStep === 'proof' ? 'active' : currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>4</span>
+            <span className={currentStep === 'details' ? 'active' : currentStep === 'success' ? 'completed' : ''}>5</span>
           </div>
         </div>
 
@@ -269,17 +308,31 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
           {currentStep === 'task' && (
             <div className="step-section">
               <h3>Selectează Task-ul</h3>
-              <div className="task-list">
-                {tasks.map((task) => (
-                  <button
-                    key={task}
-                    className={`task-btn ${selectedTask === task ? 'selected' : ''}`}
-                    onClick={() => handleTaskSelect(task)}
-                  >
-                    {task}
-                  </button>
-                ))}
-              </div>
+              {tasks.length === 0 ? (
+                <div style={{ 
+                  padding: '20px', 
+                  background: '#fff3cd', 
+                  border: '1px solid #ffc107',
+                  borderRadius: '8px',
+                  color: '#856404',
+                  textAlign: 'center',
+                  marginBottom: '20px'
+                }}>
+                  <strong>⚠️ Nu există task-uri disponibile pentru departamentul {selectedDepartment}.</strong>
+                </div>
+              ) : (
+                <div className="task-list">
+                  {tasks.map((task) => (
+                    <button
+                      key={task}
+                      className={`task-btn ${selectedTask === task ? 'selected' : ''}`}
+                      onClick={() => handleTaskSelect(task)}
+                    >
+                      {task}
+                    </button>
+                  ))}
+                </div>
+              )}
               <button 
                 className="back-btn-single" 
                 onClick={handleBack}
@@ -471,6 +524,27 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
                   {loading ? 'Se trimite...' : '✓ Trimite Cererea'}
                 </button>
               </div>
+            </div>
+          )}
+
+          {currentStep === 'success' && (
+            <div className="step-section success-screen">
+              <div className="success-icon">✅</div>
+              <h3>Cerere Trimisă cu Succes!</h3>
+              <p>Cererea ta a fost trimisă și este în așteptarea aprobării.</p>
+              <p className="success-details">
+                <strong>Departament:</strong> {selectedDepartment}<br />
+                <strong>Task:</strong> {selectedTask}
+              </p>
+              <button 
+                className="close-success-btn"
+                onClick={() => {
+                  resetForm();
+                  onClose();
+                }}
+              >
+                Închide
+              </button>
             </div>
           )}
         </div>

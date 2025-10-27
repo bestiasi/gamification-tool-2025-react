@@ -127,11 +127,46 @@
   height: 60px;
 }
 
+.it-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s ease;
+}
+
+.it-table th.sortable:hover {
+  background-color: #ffe66d;
+}
+
 /* REGULA SPECIALĂ PENTRU CELULA CU TASK-URI */
 .it-table td.task-column {
   padding: 0 !important;
   vertical-align: top !important;
   border: 1px solid #e5d77e;
+}
+
+.task-scroll-container {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 15px 8px;
+  text-align: center;
+}
+
+.task-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.task-scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.task-scroll-container::-webkit-scrollbar-thumb {
+  background: #f8e9a1;
+  border-radius: 4px;
+}
+
+.task-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #ffe66d;
 }
 
 /* Row Styles */
@@ -144,7 +179,7 @@
   vertical-align: middle;
   font-size: 16px;
   line-height: 1.4;
-  height: 50px;
+  max-height: 150px;
 }
 
 .it-table tr.row-dark td {
@@ -156,7 +191,7 @@
   vertical-align: middle;
   font-size: 16px;
   line-height: 1.4;
-  height: 50px;
+  max-height: 150px;
 }
 
 /* Column-specific widths */

@@ -8,7 +8,7 @@ interface UserPoints {
   name: string;
   email: string;
   totalPoints: number;
-  tasks: Array<{task: string; points: number}>;
+  tasks: Array<{task: string; points: number; count?: number}>;
 }
 
 interface DepartmentTask {
@@ -23,11 +23,36 @@ function HR() {
   const [departmentTasks, setDepartmentTasks] = useState<DepartmentTask[]>([]);
   const [activeTab, setActiveTab] = useState<'activity' | 'tasks'>('activity');
   const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState<{key: 'name' | 'points' | 'tasks'; direction: 'asc' | 'desc'}>({
+    key: 'points',
+    direction: 'desc'
+  });
 
   // Fetch data from Firestore
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch department tasks first to get actual points
+        const tasksQuery = query(
+          collection(db, 'departmentTasks'),
+          where('department', '==', 'HR')
+        );
+        const tasksSnapshot = await getDocs(tasksQuery);
+        const taskPointsMap = new Map<string, number>();
+        const tasks: DepartmentTask[] = [];
+
+        tasksSnapshot.forEach((doc) => {
+          const data = doc.data();
+          tasks.push({
+            id: doc.id,
+            ...data
+          } as DepartmentTask);
+          // Store points for each task description
+          taskPointsMap.set(data.description, data.points);
+        });
+
+        setDepartmentTasks(tasks);
+
         // Fetch leaderboard with tasks
         const leaderboardQuery = query(
           collection(db, 'pointRequests'),
@@ -42,45 +67,47 @@ function HR() {
           const data = doc.data();
           const userEmail = data.userEmail;
           const userName = data.userName;
-          const task = data.task || 'Task nespecificat';
+          const taskDescription = data.task || 'Task nespecificat';
+          
+          // Extract task description (remove points suffix if present)
+          const taskDescOnly = taskDescription.split(' (')[0];
+          
+          // Get actual points from taskPointsMap, fallback to parsing or 0
+          let taskPoints = taskPointsMap.get(taskDescOnly) || 0;
+          if (taskPoints === 0) {
+            // Try to parse from task string like "Task Name (10 puncte)"
+            const match = taskDescription.match(/\((\d+)\s*puncte?\)/);
+            if (match) {
+              taskPoints = parseInt(match[1]);
+            }
+          }
           
           if (pointsMap.has(userEmail)) {
             const existing = pointsMap.get(userEmail)!;
-            existing.totalPoints += 1;
-            existing.tasks.push({ task, points: 1 });
+            existing.totalPoints += taskPoints;
+            
+            // Check if this task already exists, if so increment count
+            const existingTask = existing.tasks.find(t => t.task === taskDescription);
+            if (existingTask) {
+              existingTask.count = (existingTask.count || 1) + 1;
+              existingTask.points += taskPoints;
+            } else {
+              existing.tasks.push({ task: taskDescription, points: taskPoints, count: 1 });
+            }
           } else {
             pointsMap.set(userEmail, {
               name: userName,
               email: userEmail,
-              totalPoints: 1,
-              tasks: [{ task, points: 1 }]
+              totalPoints: taskPoints,
+              tasks: [{ task: taskDescription, points: taskPoints, count: 1 }]
             });
           }
         });
 
         const leaderboardData = Array.from(pointsMap.values())
-          .filter(user => user.totalPoints > 0)
-          .sort((a, b) => b.totalPoints - a.totalPoints);
+          .filter(user => user.totalPoints > 0);
 
         setTableData(leaderboardData);
-
-        // Fetch department tasks
-        const tasksQuery = query(
-          collection(db, 'departmentTasks'),
-          where('department', '==', 'HR')
-        );
-
-        const tasksSnapshot = await getDocs(tasksQuery);
-        const tasks: DepartmentTask[] = [];
-
-        tasksSnapshot.forEach((doc) => {
-          tasks.push({
-            id: doc.id,
-            ...doc.data()
-          } as DepartmentTask);
-        });
-
-        setDepartmentTasks(tasks);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -90,6 +117,32 @@ function HR() {
 
     fetchData();
   }, []);
+
+  // Sort data based on sortConfig
+  const sortedData = [...tableData].sort((a, b) => {
+    if (sortConfig.key === 'name') {
+      const comparison = a.name.localeCompare(b.name);
+      return sortConfig.direction === 'asc' ? comparison : -comparison;
+    } else if (sortConfig.key === 'points') {
+      return sortConfig.direction === 'asc' 
+        ? a.totalPoints - b.totalPoints 
+        : b.totalPoints - a.totalPoints;
+    } else if (sortConfig.key === 'tasks') {
+      const tasksA = a.tasks.length;
+      const tasksB = b.tasks.length;
+      return sortConfig.direction === 'asc' 
+        ? tasksA - tasksB 
+        : tasksB - tasksA;
+    }
+    return 0;
+  });
+
+  const handleSort = (key: 'name' | 'points' | 'tasks') => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+    }));
+  };
 
   // Mouse-interactive decorations
   useEffect(() => {
@@ -236,28 +289,35 @@ function HR() {
             <table className="hr-table">
               <thead>
                 <tr>
-                  <th className="name-column">NUME ȘI PRENUME BESTAN</th>
-                  <th className="score-column">PUNCTAJ TOTAL</th>
-                  <th className="task-column">TASK-URI COMPLETATE</th>
+                  <th className="name-column sortable" onClick={() => handleSort('name')}>
+                    BESTAN
+                  </th>
+                  <th className="score-column sortable" onClick={() => handleSort('points')}>
+                    PUNCTAJ TOTAL
+                  </th>
+                  <th className="task-column sortable" onClick={() => handleSort('tasks')}>
+                    TASK-URI COMPLETATE
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {tableData.length === 0 ? (
+                {sortedData.length === 0 ? (
                   <tr>
                     <td colSpan={3} style={{textAlign: 'center', padding: '40px', color: 'white'}}>
                       Nu există date disponibile
                     </td>
                   </tr>
                 ) : (
-                  tableData.map((person, index) => (
+                  sortedData.map((person, index) => (
                     <tr key={person.email} className={index % 2 === 0 ? "row-light" : "row-dark"}>
                       <td className="name-column">{person.name}</td>
                       <td className="score-column">{person.totalPoints}</td>
                       <td className="task-column">
-                        <div className="task-text-large">
+                        <div className="task-scroll-container">
                           {person.tasks.map((taskItem, taskIndex) => (
                             <span key={taskIndex}>
-                              <strong>{taskItem.task} ({taskItem.points}P)</strong>
+                              <strong>{taskItem.task}</strong>
+                              {taskItem.count && taskItem.count > 1 && <span style={{color: '#ff6b35'}}> x{taskItem.count}</span>}
                               {taskIndex < person.tasks.length - 1 && <><br /><br /></>}
                             </span>
                           ))}
