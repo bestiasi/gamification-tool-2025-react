@@ -38,7 +38,21 @@ function Login() {
       
       navigate('/welcome');
     } catch (err: any) {
-      setError(err.message || 'Eroare la autentificare cu Google');
+      console.error('Login error:', err);
+      
+      // Handle specific error codes
+      if (err.code === 'auth/popup-blocked') {
+        setError('⚠️ Popup-ul a fost blocat. Te rog activează popup-urile pentru acest site.');
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError('Autentificarea a fost anulată.');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError('⚠️ Domeniul nu este autorizat. Contactează administratorul.');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        // User cancelled, don't show error
+        setError('');
+      } else {
+        setError(err.message || 'Eroare la autentificare cu Google');
+      }
     } finally {
       setLoading(false);
     }

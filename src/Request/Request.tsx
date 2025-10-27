@@ -48,17 +48,25 @@ function Request() {
         const tasksSnapshot = await getDocs(tasksQuery);
         const tasks: DepartmentTask[] = [];
 
+        console.log('Query snapshot size:', tasksSnapshot.size);
+        
         tasksSnapshot.forEach((doc) => {
+          const data = doc.data();
+          console.log('Task document:', doc.id, data);
           tasks.push({
             id: doc.id,
-            ...doc.data()
+            department: data.department,
+            description: data.description,
+            points: data.points
           } as DepartmentTask);
         });
 
         console.log('Fetched tasks:', tasks);
+        console.log('Total tasks found:', tasks.length);
         setDepartmentTasks(tasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
+        console.error('Error details:', error);
       } finally {
         setLoadingTasks(false);
       }
