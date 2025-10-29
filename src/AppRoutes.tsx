@@ -1,22 +1,23 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import Header from './Header';
-import Footer from './Footer';
-import Login from './Login/Login';
-import Welcome from './Welcome/Welcome';
-import Success from './Success/Success';
-import Admin from './Admin';
-import AdminTransfer from './AdminTransfer';
-import AdminSetup from './AdminSetup';
-import MyRequests from './MyRequests';
+import Header from './layout/Header';
+import Footer from './layout/Footer';
+import Login from './pages/Login/Login';
+import Welcome from './pages/Welcome/Welcome';
+import Success from './pages/Success/Success';
+import Admin from './pages/Admin';
+import AdminTransfer from './pages/AdminTransfer';
+import AdminSetup from './pages/AdminSetup';
+import AcceptTransfer from './pages/AcceptTransfer';
+import Requests from './pages/Requests';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomeRedirect from './components/HomeRedirect';
 
 // Import department pages
-import HR from './HR/index.tsx';
-import IT from './IT/index.tsx';
-import PR from './PR/index.tsx';
-import FR from './FR/index.tsx';
+import HR from './pages/HR/index.tsx';
+import IT from './pages/IT/index.tsx';
+import PR from './pages/PR/index.tsx';
+import FR from './pages/FR/index.tsx';
 
 function AppRoutes() {
   const { user } = useAuth();
@@ -30,7 +31,7 @@ function AppRoutes() {
           { text: 'PR', url: '/pr' },
           { text: 'IT', url: '/it' },
           { text: 'FR', url: '/fr' },
-          { text: 'REQUESTS', url: '/my-requests' },
+          { text: 'REQUESTS', url: '/requests' },
           { text: 'ADMIN', url: '/admin' }
         ]}
       />
@@ -80,9 +81,9 @@ function AppRoutes() {
                 <FR />
               </ProtectedRoute>
             } />
-            <Route path="/my-requests" element={
+            <Route path="/requests" element={
               <ProtectedRoute>
-                <MyRequests />
+                <Requests />
               </ProtectedRoute>
             } />
             <Route path="/admin" element={
@@ -93,6 +94,11 @@ function AppRoutes() {
             <Route path="/admin/transfer" element={
               <ProtectedRoute>
                 <AdminTransfer />
+              </ProtectedRoute>
+            } />
+            <Route path="/accept-transfer" element={
+              <ProtectedRoute>
+                <AcceptTransfer />
               </ProtectedRoute>
             } />
             <Route path="/admin/setup" element={

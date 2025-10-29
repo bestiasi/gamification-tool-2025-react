@@ -6,7 +6,7 @@ service cloud.firestore {
     match /pointRequests/{requestId} {
       allow create: if request.auth != null 
         && request.auth.token.email.matches('.*@bestis.ro$')
-        && request.resource.data.keys().hasAll(['userId', 'userEmail', 'userName', 'department', 'task', 'eventDate', 'proofUrl', 'status', 'createdAt']);
+        && request.resource.data.keys().hasAll(['userId', 'userEmail', 'userName', 'department', 'task', 'status', 'createdAt']);
       
       allow read: if request.auth != null
         && request.auth.token.email.matches('.*@bestis.ro$');

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage } from '../firebase/config';
+import { auth, db } from '../firebase/config';
 import './RequestModal.css';
 
 interface RequestModalProps {
@@ -11,7 +10,7 @@ interface RequestModalProps {
   onSuccess: () => void;
 }
 
-type StepType = 'department' | 'task' | 'date' | 'proof' | 'details' | 'success';
+type StepType = 'department' | 'task' | 'date' | 'details' | 'success';
 
 function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
   const [user] = useAuthState(auth);
@@ -22,8 +21,6 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [_selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [proofPreview, setProofPreview] = useState<string>('');
   const [taskNumber, setTaskNumber] = useState('1');
   const [details, setDetails] = useState('');
   const [loading, setLoading] = useState(false);
@@ -73,20 +70,8 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
     setCurrentStep('date');
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProofFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProofPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!selectedDepartment || !selectedTask || !eventDate || !proofFile) {
+    if (!selectedDepartment || !selectedTask || !eventDate) {
       setError('Te rog completează toate câmpurile obligatorii!');
       return;
     }
@@ -96,29 +81,6 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
 
     try {
       console.log('🚀 Starting request submission...');
-      
-      let proofUrl = '';
-      
-      // Try to upload proof image to Firebase Storage with timeout
-      try {
-        console.log('📤 Uploading proof image...');
-        const timestamp = Date.now();
-        const fileName = `proofs/${user?.uid}/${timestamp}_${proofFile.name}`;
-        const storageRef = ref(storage, fileName);
-        
-        // Create upload with 5 second timeout
-        const uploadPromise = uploadBytes(storageRef, proofFile);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Upload timeout')), 5000)
-        );
-        
-        await Promise.race([uploadPromise, timeoutPromise]);
-        proofUrl = await getDownloadURL(storageRef);
-        console.log('✅ Proof uploaded successfully');
-      } catch (storageError) {
-        console.warn('⚠️ Storage upload failed (Storage not enabled yet):', storageError);
-        proofUrl = 'pending-upload'; // Temporary placeholder
-      }
 
       // Add request to Firestore
       console.log('💾 Saving request to Firestore...');
@@ -129,7 +91,6 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
         department: selectedDepartment,
         task: selectedTask,
         eventDate: eventDate,
-        proofUrl: proofUrl,
         taskNumber: taskNumber || null,
         details: details || null,
         status: 'pending',
@@ -159,8 +120,6 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
     setSelectedDepartment('');
     setSelectedTask('');
     setEventDate('');
-    setProofFile(null);
-    setProofPreview('');
     setTaskNumber('1');
     setDetails('');
     setError('');
@@ -169,13 +128,11 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
   const handleBack = () => {
     if (currentStep === 'task') setCurrentStep('department');
     else if (currentStep === 'date') setCurrentStep('task');
-    else if (currentStep === 'proof') setCurrentStep('date');
-    else if (currentStep === 'details') setCurrentStep('proof');
+    else if (currentStep === 'details') setCurrentStep('date');
   };
 
   const handleNext = () => {
-    if (currentStep === 'date' && eventDate) setCurrentStep('proof');
-    else if (currentStep === 'proof' && proofFile) setCurrentStep('details');
+    if (currentStep === 'date' && eventDate) setCurrentStep('details');
   };
 
   const getAvailableMonths = () => {
@@ -280,10 +237,9 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
           <h2>📝 Cerere Nouă de Puncte</h2>
           <div className="progress-dots">
             <span className={currentStep === 'department' ? 'active' : 'completed'}>1</span>
-            <span className={currentStep === 'task' ? 'active' : currentStep === 'date' || currentStep === 'proof' || currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>2</span>
-            <span className={currentStep === 'date' ? 'active' : currentStep === 'proof' || currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>3</span>
-            <span className={currentStep === 'proof' ? 'active' : currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>4</span>
-            <span className={currentStep === 'details' ? 'active' : currentStep === 'success' ? 'completed' : ''}>5</span>
+            <span className={currentStep === 'task' ? 'active' : currentStep === 'date' || currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>2</span>
+            <span className={currentStep === 'date' ? 'active' : currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>3</span>
+            <span className={currentStep === 'details' ? 'active' : currentStep === 'success' ? 'completed' : ''}>4</span>
           </div>
         </div>
 
@@ -445,45 +401,6 @@ function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
                   className="next-btn-inline"
                   onClick={handleNext}
                   disabled={!eventDate}
-                >
-                  Următorul Pas →
-                </button>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 'proof' && (
-            <div className="step-section">
-              <h3>Dă-ne un selfie de la fața locului! 🤳</h3>
-              <p className="step-description">Fă o poză care demonstrează realizarea task-ului</p>
-              <div className="file-upload-area">
-                <input
-                  type="file"
-                  id="proof-file"
-                  accept="image/*"
-                  capture="user"
-                  onChange={handleFileChange}
-                  className="file-input"
-                />
-                <label htmlFor="proof-file" className="file-label">
-                  {proofPreview ? (
-                    <img src={proofPreview} alt="Preview" className="proof-preview" />
-                  ) : (
-                    <>
-                      <span className="upload-icon">📷</span>
-                      <span>Click pentru a face un selfie</span>
-                    </>
-                  )}
-                </label>
-              </div>
-              <div className="button-row">
-                <button className="back-btn-inline" onClick={handleBack}>
-                  ← Înapoi
-                </button>
-                <button 
-                  className="next-btn-inline"
-                  onClick={handleNext}
-                  disabled={!proofFile}
                 >
                   Următorul Pas →
                 </button>

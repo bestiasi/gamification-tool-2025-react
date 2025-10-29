@@ -15,6 +15,9 @@ dist-ssr
 # Firebase exports (contains user data)
 auth-config.json
 
+# Server configuration - don't overwrite production
+public/.htaccess
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

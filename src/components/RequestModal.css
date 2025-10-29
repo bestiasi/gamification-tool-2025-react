@@ -93,10 +93,10 @@
 }
 
 .progress-dots span.active {
-  background: linear-gradient(135deg, #f7a113 0%, #016fb4 100%);
+  background: #016fb4;
   color: white;
   transform: scale(1.2);
-  box-shadow: 0 4px 15px rgba(247, 161, 19, 0.4);
+  box-shadow: 0 4px 15px rgba(1, 111, 180, 0.4);
 }
 
 .progress-dots span.completed {
@@ -154,7 +154,7 @@
 }
 
 .dept-btn.selected {
-  background: linear-gradient(135deg, #f7a113 0%, #016fb4 100%);
+  background: #016fb4;
   border-color: #016fb4;
   color: white;
   box-shadow: 0 4px 15px rgba(247, 161, 19, 0.4);
@@ -188,7 +188,7 @@
 }
 
 .task-btn.selected {
-  background: linear-gradient(135deg, #f7a113 0%, #71ba20 100%);
+  background: #71ba20;
   border-color: #71ba20;
   color: white;
   box-shadow: 0 3px 10px rgba(113, 186, 32, 0.4);
@@ -291,7 +291,7 @@
 }
 
 .month-btn:hover {
-  background: linear-gradient(135deg, #f7a113 0%, #016fb4 100%);
+  background: #016fb4;
   border-color: #016fb4;
   color: white;
   transform: translateY(-2px);
@@ -357,7 +357,7 @@
 }
 
 .day-btn:hover {
-  background: linear-gradient(135deg, #71ba20 0%, #016fb4 100%);
+  background: #71ba20;
   border-color: #71ba20;
   color: white;
   transform: scale(1.1);
@@ -394,7 +394,7 @@
 
 .today-btn {
   padding: 18px 20px;
-  background: linear-gradient(135deg, #71ba20 0%, #016fb4 100%);
+  background: #71ba20;
   border: none;
   border-radius: 12px;
   color: white;
@@ -529,7 +529,7 @@
 .submit-btn-inline {
   flex: 1;
   padding: 18px 25px;
-  background: linear-gradient(135deg, #f7a113 0%, #016fb4 100%);
+  background: #016fb4;
   border: none;
   border-radius: 50px;
   color: white;
@@ -554,7 +554,7 @@
 }
 
 .submit-btn-inline {
-  background: linear-gradient(135deg, #71ba20 0%, #016fb4 100%);
+  background: #71ba20;
   box-shadow: 0 4px 15px rgba(113, 186, 32, 0.4);
 }
 
@@ -669,7 +669,7 @@
 .close-success-btn {
   margin-top: 20px;
   padding: 15px 40px;
-  background: linear-gradient(135deg, #f7a113 0%, #016fb4 100%);
+  background: #016fb4;
   border: none;
   border-radius: 50px;
   color: white;

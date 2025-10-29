@@ -1,0 +1,243 @@
+.transfer-page {
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
+  padding: 40px 20px;
+  padding-top: calc(var(--header-height) * 1.5);
+  margin-top: 0;
+  background: linear-gradient(135deg, #fff9e6 0%, #ffe8b3 100%);
+}
+
+.transfer-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.transfer-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(247, 161, 19, 0.3);
+  border: 3px solid #FFCC33;
+  backdrop-filter: blur(10px);
+}
+
+.transfer-content h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  text-align: center;
+  background: linear-gradient(135deg, #f7a113 0%, #FFCC33 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.transfer-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 30px 0 15px 0;
+}
+
+.transfer-subtitle {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.transfer-form {
+  margin-top: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.transfer-input,
+.transfer-select {
+  width: 100%;
+  padding: 15px 20px;
+  border: 3px solid #FFCC33;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: white;
+  color: #2c3e50;
+  transition: all 0.3s ease;
+}
+
+.transfer-select option {
+  color: #2c3e50;
+  background: white;
+}
+
+.transfer-input:focus,
+.transfer-select:focus {
+  outline: none;
+  border-color: #f7a113;
+  box-shadow: 0 2px 8px rgba(247, 161, 19, 0.3);
+}
+
+.transfer-button {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #f7a113 0%, #FFCC33 100%);
+  border: none;
+  border-radius: 12px;
+  color: #2c3e50;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  box-shadow: 0 4px 15px rgba(247, 161, 19, 0.3);
+}
+
+.transfer-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(247, 161, 19, 0.5);
+  background: linear-gradient(135deg, #FFCC33 0%, #f7a113 100%);
+}
+
+.transfer-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.transfer-error {
+  background: #ff4444;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin: 15px 0;
+}
+
+.transfer-success {
+  background: #71ba20;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin: 15px 0;
+}
+
+.copy-link-btn {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  color: #71ba20;
+  border: 2px solid white;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+}
+
+.copy-link-btn:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.incoming-transfers,
+.pending-transfers {
+  margin-top: 30px;
+}
+
+.transfer-card {
+  background: white;
+  border: 3px solid #FFCC33;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 10px rgba(247, 161, 19, 0.1);
+}
+
+.transfer-card p {
+  margin: 8px 0;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.accept-btn {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #71ba20 0%, #5a9a1a 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.accept-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(113, 186, 32, 0.4);
+}
+
+.accept-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.reject-btn {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reject-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+}
+
+.reject-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.transfer-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.status-pending {
+  color: #f7a113;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .transfer-content {
+    padding: 25px;
+  }
+
+  .transfer-content h1 {
+    font-size: 2rem;
+  }
+}
