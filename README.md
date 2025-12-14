@@ -1,4 +1,4 @@
-# BEST Iasi Gamification Tool 2025 (intern tool)
+# BEST Iasi Gamification Tool 2025-2026 (intern tool)
 This is the repository for the BEST Iasi Gamification Tool 2025, a web application built using React and Vite.
 
 ## Prerequisites
