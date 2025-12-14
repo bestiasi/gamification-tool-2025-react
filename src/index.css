@@ -31,7 +31,6 @@ body {
   --footer-height: 80px;
 }
 
-/* Fundal galben cu emoji-uri */
 body {
   background-color: #FFCC33;
   background-image: url('/background.svg');
