@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import { accessibleDepartments } from '../../constants/departments';
 import type { Department } from '../../models';
 import { grantAdminRole } from '../../services/authService';

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { useAdminRequests } from './useRequests';
 import { useTaskCatalog } from './useTasks';
 import { useMemberNames } from './useMemberNames';

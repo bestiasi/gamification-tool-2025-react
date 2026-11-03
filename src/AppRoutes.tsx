@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from './contexts/useAuth';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import ProtectedRoute from './components/ProtectedRoute';

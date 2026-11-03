@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import { acceptTransfer, getTransferById, rejectTransfer } from '../../services/transferService';
 import type { AdminTransfer } from '../../models';
 import { formatDateTime } from '../../utils';

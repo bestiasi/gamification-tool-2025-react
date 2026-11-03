@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { REQUEST_DEPARTMENTS } from '../constants/departments';
 import { hasDepartmentAccess } from '../utils/roles';
 import type { DepartmentTask, RequestDepartment } from '../models';

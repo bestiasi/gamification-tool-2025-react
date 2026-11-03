@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { addSecretary, getAllSecretaries, removeSecretary } from '../services/secretaryService';
 import type { SecretaryInfo } from '../services/secretaryService';
 import { accessibleDepartments } from '../constants/departments';

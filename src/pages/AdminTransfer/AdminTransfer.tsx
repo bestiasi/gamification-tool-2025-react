@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import {
   acceptTransfer, createTransferRequest, getIncomingTransfers, getPendingTransfers, rejectTransfer,
 } from '../../services/transferService';

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import { useUserRequests } from '../../hooks/useRequests';
 import { useTaskCatalog } from '../../hooks/useTasks';
 import { resolveRequestTask } from '../../utils/scoring';

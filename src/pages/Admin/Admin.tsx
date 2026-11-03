@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 import AdminRequests from '../../components/admin/AdminRequests';
 import AdminTasks from '../../components/admin/AdminTasks';
 import AdminSecretaries from '../../components/admin/AdminSecretaries';
