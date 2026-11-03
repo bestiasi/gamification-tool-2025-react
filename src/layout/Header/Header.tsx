@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { useAuth } from '../../contexts/AuthContext';
+import { departmentPages } from '../../constants/departments';
 import './Header.css';
 
 interface HeaderProps {
@@ -13,10 +14,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ 
 logo = "/icons/logo best.png",
   links = [
-    { text: 'HR', url: '/hr' },
-    { text: 'PR', url: '/pr' },
-    { text: 'IT', url: '/it' },
-    { text: 'FR', url: '/fr' },
+    ...departmentPages.map(({ department, path }) => ({ text: department, url: path })),
     { text: 'MY REQUESTS', url: '/my-requests' },
     { text: 'ADMIN', url: '/admin' }
   ] 
@@ -25,7 +23,7 @@ logo = "/icons/logo best.png",
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isSecretary } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -56,7 +54,7 @@ logo = "/icons/logo best.png",
   // Filter links based on admin status
   const filteredLinks = links.filter(link => {
     if (link.url === '/admin') {
-      return isAdmin;
+      return isAdmin || isSecretary;
     }
     return true;
   });
@@ -79,8 +77,8 @@ logo = "/icons/logo best.png",
         {/* Desktop navigation - folosim Link în loc de a */}
         <nav className="desktop-nav">
           <ul className="nav-links">
-            {filteredLinks.map((link, index) => (
-              <li key={index}>
+            {filteredLinks.map((link) => (
+              <li key={link.url}>
                 <Link 
                   to={link.url} 
                   className={isLinkActive(link.url) ? 'active' : ''}
@@ -119,8 +117,8 @@ logo = "/icons/logo best.png",
         {/* Mobile navigation - folosim Link în loc de a */}
         <nav className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
           <ul className="mobile-nav-links">
-            {filteredLinks.map((link, index) => (
-              <li key={index}>
+            {filteredLinks.map((link) => (
+              <li key={link.url}>
                 <Link 
                   to={link.url}
                   className={isLinkActive(link.url) ? 'active' : ''}

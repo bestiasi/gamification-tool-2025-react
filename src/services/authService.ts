@@ -1,94 +1,48 @@
-/**
- * Authentication Service
- * Handles user authentication and role management
- */
-
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, runTransaction } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { COLLECTIONS } from '../constants';
-import type { Admin, Secretary, UserRole } from '../models';
+import { COLLECTIONS, VALIDATION } from '../constants';
+import { normalizeEmail } from './memberService';
+import type { Department, UserRole } from '../models';
+import { parseDepartments, resolveRoles } from '../utils/roles';
 
 export interface UserRoleInfo {
   isAuthenticated: boolean;
   role: UserRole | null;
   isAdmin: boolean;
   isSecretary: boolean;
-  departments: string[];
+  departments: Department[];
 }
 
-/**
- * Check if user has admin or secretary role
- */
 export const checkUserRole = async (email: string): Promise<UserRoleInfo> => {
-  if (!email) {
-    return {
-      isAuthenticated: false,
-      role: null,
-      isAdmin: false,
-      isSecretary: false,
-      departments: [],
-    };
-  }
-
-  try {
-    // Check if user is admin
-    const adminDoc = await getDoc(doc(db, COLLECTIONS.ADMINS, email));
-    if (adminDoc.exists()) {
-      const adminData = adminDoc.data() as Admin;
-      return {
-        isAuthenticated: true,
-        role: 'admin',
-        isAdmin: true,
-        isSecretary: false,
-        departments: adminData.departments || [],
-      };
-    }
-
-    // Check if user is secretary
-    const secretaryDoc = await getDoc(doc(db, COLLECTIONS.SECRETARIES, email));
-    if (secretaryDoc.exists()) {
-      const secretaryData = secretaryDoc.data() as Secretary;
-      return {
-        isAuthenticated: true,
-        role: 'secretary',
-        isAdmin: false,
-        isSecretary: true,
-        departments: secretaryData.departments || [],
-      };
-    }
-
-    // Regular user
-    return {
-      isAuthenticated: true,
-      role: 'user',
-      isAdmin: false,
-      isSecretary: false,
-      departments: [],
-    };
-  } catch (error) {
-    console.error('Error checking user role:', error);
-    return {
-      isAuthenticated: false,
-      role: null,
-      isAdmin: false,
-      isSecretary: false,
-      departments: [],
-    };
-  }
+  if (!email) return { isAuthenticated: false, role: null, isAdmin: false, isSecretary: false, departments: [] };
+  const [admin, secretary] = await Promise.all([
+    getDoc(doc(db, COLLECTIONS.ADMINS, normalizeEmail(email))),
+    getDoc(doc(db, COLLECTIONS.SECRETARIES, normalizeEmail(email))),
+  ]);
+  return {
+    isAuthenticated: true,
+    ...resolveRoles(admin.exists() ? admin.data() : null, secretary.exists() ? secretary.data() : null),
+  };
 };
 
-/**
- * Check if user is admin
- */
-export const isUserAdmin = async (email: string): Promise<boolean> => {
-  const roleInfo = await checkUserRole(email);
-  return roleInfo.isAdmin;
-};
+export const isUserAdmin = async (email: string): Promise<boolean> => (await checkUserRole(email)).isAdmin;
 
-/**
- * Check if user has access to admin panel (admin or secretary)
- */
 export const hasAdminAccess = async (email: string): Promise<boolean> => {
-  const roleInfo = await checkUserRole(email);
-  return roleInfo.isAdmin || roleInfo.isSecretary;
+  const role = await checkUserRole(email);
+  return role.isAdmin || role.isSecretary;
 };
+
+export async function grantAdminRole(rawEmail: string, departments: Department[]): Promise<void> {
+  const email = normalizeEmail(rawEmail);
+  if (!email.endsWith(VALIDATION.EMAIL_DOMAIN) || !departments.length) {
+    throw new Error('Emailul și departamentele administratorului sunt obligatorii.');
+  }
+  const reference = doc(db, COLLECTIONS.ADMINS, email);
+  await runTransaction(db, async transaction => {
+    const current = await transaction.get(reference);
+    const previous = current.exists() ? parseDepartments(current.data().departments) : [];
+    const assigned = [...new Set([...previous, ...departments])];
+    if (current.exists()) transaction.update(reference, { departments: assigned });
+    else transaction.set(reference, { departments: assigned });
+  });
+}

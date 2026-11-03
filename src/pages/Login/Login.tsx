@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   signInWithPopup, 
   GoogleAuthProvider
 } from 'firebase/auth';
 import { auth } from '../../firebase/config';
+import { loginDestination } from '../../utils/navigation';
 import './Login.css';
 
 function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Google Sign-In with @bestis.ro restriction
   const handleGoogleLogin = async () => {
@@ -36,22 +38,23 @@ function Login() {
         return;
       }
       
-      navigate('/welcome');
-    } catch (err: any) {
+      navigate(loginDestination(location.search));
+    } catch (err) {
       console.error('Login error:', err);
+      const code = typeof err === 'object' && err !== null && 'code' in err ? err.code : undefined;
       
       // Handle specific error codes
-      if (err.code === 'auth/popup-blocked') {
+      if (code === 'auth/popup-blocked') {
         setError('⚠️ Popup-ul a fost blocat. Te rog activează popup-urile pentru acest site.');
-      } else if (err.code === 'auth/popup-closed-by-user') {
+      } else if (code === 'auth/popup-closed-by-user') {
         setError('Autentificarea a fost anulată.');
-      } else if (err.code === 'auth/unauthorized-domain') {
+      } else if (code === 'auth/unauthorized-domain') {
         setError('⚠️ Domeniul nu este autorizat. Contactează administratorul.');
-      } else if (err.code === 'auth/cancelled-popup-request') {
+      } else if (code === 'auth/cancelled-popup-request') {
         // User cancelled, don't show error
         setError('');
       } else {
-        setError(err.message || 'Eroare la autentificare cu Google');
+        setError(err instanceof Error ? err.message : 'Eroare la autentificare cu Google');
       }
     } finally {
       setLoading(false);

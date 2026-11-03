@@ -1,0 +1,12 @@
+:root {
+  --gt-ink: #2c3e50;
+  --gt-muted: #7f8c8d;
+  --gt-surface: #fff;
+  --gt-border: #e1e8ed;
+  --gt-accent: #ffcc33;
+  --gt-warm: #f7a113;
+  --gt-info: #016fb4;
+  --gt-success: #71ba20;
+  --gt-danger: #e74c3c;
+  --gt-radius: 0.75rem;
+}

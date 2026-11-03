@@ -9,14 +9,14 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({
-  copyright = 'COPYRIGHT © 2025 BEST IASI. ALL RIGHTS RESERVED.',
+  copyright = `COPYRIGHT © ${new Date().getFullYear()} BEST IASI. ALL RIGHTS RESERVED.`,
   links = [
     { 
       text: 'GDPR', 
       url: 'https://docs.google.com/document/d/1UUIE_xTX4uwiUZ25O6p1tQD59dmHHb0Y3DKPbrUdNcA/edit?tab=t.0' 
     }
   ],
-  year = 2025
+  year = new Date().getFullYear()
 }) => {
   
   // Creează textul cu spațiu explicit

@@ -1,0 +1,310 @@
+.requests-page {
+  padding: clamp(1rem, 3vw, 2.5rem) clamp(0.75rem, 2vw, 1.25rem);
+  /* Transparent over the yellow body, like the original page. */
+  background: url('/background.svg') center / cover fixed;
+}
+
+.requests-container {
+  max-width: 75rem;
+  margin-inline: auto;
+}
+
+.requests-content {
+  padding: clamp(1rem, 3vw, 2.5rem);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--gt-ink);
+  border: 3px solid var(--gt-accent);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(247, 161, 19, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.requests-content h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  color: var(--gt-warm);
+  text-align: center;
+  margin-bottom: 1.875rem;
+}
+
+.requests-subtitle {
+  text-align: center;
+  color: var(--gt-muted);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.875rem;
+}
+
+.requests-content .add-request-btn {
+  display: flex;
+  inline-size: min(100%, 25rem);
+  margin: 0 auto 1.875rem;
+  padding: 1.125rem 1.875rem;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--gt-warm) 0%, var(--gt-accent) 100%);
+  color: var(--gt-ink);
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 8px 30px rgba(247, 161, 19, 0.4);
+}
+
+.requests-content .add-request-btn:hover {
+  background: linear-gradient(135deg, var(--gt-accent) 0%, var(--gt-warm) 100%);
+  box-shadow: 0 12px 40px rgba(247, 161, 19, 0.6);
+}
+
+.loading-text, .no-requests {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--gt-muted);
+}
+
+.loading-trigger {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding-block: 1.5rem;
+}
+
+.loading-more-text, .end-of-list {
+  color: var(--gt-muted);
+  text-align: center;
+}
+
+.end-of-list {
+  padding-block-start: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
+  gap: clamp(0.5rem, 2vw, 1.25rem);
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  min-inline-size: 0;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  border: 3px solid var(--status-border, var(--gt-ink));
+  border-radius: 16px;
+  background: var(--status-background, var(--gt-surface));
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.stat-number {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  color: var(--gt-ink);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gt-muted);
+  text-transform: uppercase;
+}
+
+.stat-card.status-pending { --status-background: #fff9e6; }
+.stat-card.status-approved { --status-background: #f0f9e8; }
+.stat-card.status-rejected { --status-background: #fde8e8; }
+
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-section label {
+  font-weight: 700;
+}
+
+.filter-section .filter-select {
+  flex: 1 1 15rem;
+  border: 3px solid var(--gt-ink);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.filter-section .filter-select:hover {
+  border-color: var(--gt-info);
+}
+
+.requests-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.status-pending {
+  --status-border: var(--gt-warm);
+  --status-background: #fff3cd;
+  --status-text: #856404;
+}
+
+.status-approved {
+  --status-border: var(--gt-success);
+  --status-background: #d4edda;
+  --status-text: #155724;
+}
+
+.status-rejected {
+  --status-border: var(--gt-danger);
+  --status-background: #f8d7da;
+  --status-text: #721c24;
+}
+
+.status-cancelled {
+  --status-border: #6c757d;
+  --status-background: #e2e3e5;
+  --status-text: #383d41;
+}
+
+.request-card {
+  min-inline-size: 0;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  border: 2px solid var(--gt-border);
+  border-inline-start: 5px solid var(--status-border);
+  border-radius: 10px;
+  background: var(--gt-surface);
+  color: var(--gt-ink);
+}
+
+.request-card:hover {
+  border-color: var(--gt-info);
+  border-inline-start-color: var(--status-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.request-card.expanded {
+  border-color: var(--gt-info);
+  border-inline-start-color: var(--status-border);
+}
+
+.request-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.request-toggle {
+  inline-size: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.request-toggle:focus-visible {
+  outline: 3px solid var(--gt-info);
+  outline-offset: 4px;
+}
+
+.request-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-inline-size: 100%;
+}
+
+.expand-icon {
+  color: var(--gt-info);
+  font-size: 0.75rem;
+}
+
+.request-dept, .status-badge {
+  padding: 0.3rem 0.875rem;
+  border-radius: 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.request-dept {
+  background: var(--gt-info);
+  color: white;
+}
+
+.status-badge {
+  background: var(--status-background);
+  color: var(--status-text);
+  border: 2px solid var(--status-border);
+}
+
+.request-body {
+  display: grid;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.request-body p {
+  margin: 0;
+  line-height: 1.5;
+  font-size: clamp(0.875rem, 1.4vw, 1rem);
+}
+
+.request-body .request-task {
+  font-weight: 700;
+}
+
+.request-event-date, .request-number, .request-date, .request-reviewed {
+  color: var(--gt-muted);
+}
+
+.request-details-full {
+  padding: 0.75rem;
+  border-inline-start: 3px solid var(--gt-info);
+  background: #f1f6fa;
+  border-radius: 0.5rem;
+}
+
+.admin-comment, .admin-comment-preview {
+  padding: 0.75rem;
+  border-inline-start: 3px solid var(--status-border);
+  border-radius: 0.5rem;
+  background: var(--status-background);
+  color: var(--status-text);
+  overflow-wrap: anywhere;
+}
+
+.admin-comment strong {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.admin-comment-preview {
+  font-size: 0.875rem;
+}
+
+.request-proof {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.proof-link {
+  font-size: 0.875rem;
+}
+
+.request-actions {
+  display: flex;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--gt-border);
+}
+
+.cancel-request-btn {
+  flex: 1;
+}

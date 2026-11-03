@@ -1,131 +1,78 @@
-import { useState } from 'react';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { useRef, useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { accessibleDepartments } from '../../constants/departments';
+import type { Department } from '../../models';
+import { grantAdminRole } from '../../services/authService';
 import './AdminSetup.css';
 
 function AdminSetup() {
+  const { isAdmin, departments: assigned } = useAuth();
+  const available = accessibleDepartments(assigned);
   const [email, setEmail] = useState('');
-  const [departments, setDepartments] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const busy = useRef(false);
 
-  const availableDepartments = ['HR', 'PR', 'IT', 'FR', 'GENERAL'];
-
-  const toggleDepartment = (dept: string) => {
-    if (departments.includes(dept)) {
-      setDepartments(departments.filter(d => d !== dept));
-    } else {
-      setDepartments([...departments, dept]);
-    }
-  };
-
-  const handleCreateAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email.endsWith('@bestis.ro')) {
-      setError('Email-ul trebuie să fie @bestis.ro');
-      return;
-    }
-
-    if (departments.length === 0) {
-      setError('Selectează cel puțin un departament');
-      return;
-    }
-
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (busy.current) return;
+    busy.current = true;
     setLoading(true);
     setError('');
     setMessage('');
-
     try {
-      await setDoc(doc(db, 'admins', email), {
-        email: email,
-        departments: departments,
-        createdAt: serverTimestamp()
-      });
-
-      setMessage(`✅ Admin creat cu succes! ${email} are acces la: ${departments.join(', ')}`);
+      if (!isAdmin || departments.some(department => !available.includes(department))) {
+        throw new Error('Poți acorda acces doar pentru departamentele administrate.');
+      }
+      await grantAdminRole(email.trim().toLowerCase(), departments);
+      setMessage('Accesul de administrator a fost acordat.');
       setEmail('');
       setDepartments([]);
-    } catch (err: any) {
-      setError('Eroare: ' + err.message);
+    } catch (error) {
+      console.error('Error granting admin role:', error);
+      setError(error instanceof Error ? error.message : 'Accesul nu a putut fi acordat.');
     } finally {
+      busy.current = false;
       setLoading(false);
     }
   };
 
   return (
-    <div className="setup-page">
-      <div className="setup-container">
-        <div className="setup-content">
-          <h1>🔧 Setup Admin</h1>
-          <p className="setup-subtitle">
-            Creează primul admin pentru sistemul de gamificare
-          </p>
-
-          <div className="warning-box">
-            <h3>⚠️ Atenție!</h3>
-            <p>Această pagină ar trebui folosită doar pentru setup inițial.</p>
-            <p>După ce creezi primul admin GENERAL, folosește pagina /admin/transfer pentru a adăuga alți admini.</p>
-          </div>
-
-          <form onSubmit={handleCreateAdmin} className="setup-form">
-            <div className="form-group">
-              <label>Email Admin (@bestis.ro):</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@bestis.ro"
-                className="setup-input"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Departamente:</label>
-              <div className="departments-grid">
-                {availableDepartments.map(dept => (
-                  <button
-                    key={dept}
-                    type="button"
-                    className={`dept-btn ${departments.includes(dept) ? 'selected' : ''}`}
-                    onClick={() => toggleDepartment(dept)}
-                  >
-                    {dept}
-                    {dept === 'GENERAL' && <span className="general-badge">Toate</span>}
-                  </button>
-                ))}
+    <main className="setup-page">
+      <div className="setup-container"><div className="setup-content">
+        <h1>Gestionare administratori</h1>
+        {!isAdmin ? <p role="alert">Accesul este rezervat administratorilor cu departamente atribuite.</p> : (
+          <>
+            <p className="setup-subtitle">Acordă acces doar pentru departamentele pe care le administrezi. Accesul existent se păstrează.</p>
+            <form onSubmit={submit} className="setup-form">
+              <div className="form-group">
+                <label htmlFor="admin-email">Email administrator (@bestis.ro)</label>
+                <input id="admin-email" type="email" value={email} onChange={event => setEmail(event.target.value)}
+                  className="setup-input" required disabled={loading} />
               </div>
-              <p className="helper-text">
-                💡 Recomandare: Selectează GENERAL pentru primul admin
-              </p>
-            </div>
-
-            {error && <div className="setup-error">{error}</div>}
-            {message && <div className="setup-success">{message}</div>}
-
-            <button 
-              type="submit" 
-              className="setup-button"
-              disabled={loading}
-            >
-              {loading ? 'Se creează...' : '✨ Creează Admin'}
-            </button>
-          </form>
-
-          <div className="info-box">
-            <h3>📋 Cum funcționează?</h3>
-            <ul>
-              <li><strong>GENERAL</strong>: Acces la toate departamentele (HR, PR, IT, FR)</li>
-              <li><strong>HR/PR/IT/FR</strong>: Acces doar la departamentul respectiv</li>
-              <li>Poți selecta multiple departamente pentru un admin</li>
-              <li>După setup, folosește /admin/transfer pentru a adăuga alți admini</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+              <fieldset disabled={loading}>
+                <legend>Departamente</legend>
+                <div className="departments-grid">{available.map(department => (
+                  <button key={department} type="button" aria-pressed={departments.includes(department)}
+                    className={`dept-btn ${departments.includes(department) ? 'selected' : ''}`}
+                    onClick={() => setDepartments(current => current.includes(department)
+                      ? current.filter(value => value !== department) : [...current, department])}>
+                    {department}
+                  </button>
+                ))}</div>
+              </fieldset>
+              {error && <p className="setup-error" role="alert">{error}</p>}
+              {message && <p className="setup-success" role="status">{message}</p>}
+              <button type="submit" className="setup-button" disabled={loading || !departments.length}>
+                {loading ? 'Se salvează...' : 'Acordă acces'}
+              </button>
+            </form>
+          </>
+        )}
+      </div></div>
+    </main>
   );
 }
 

@@ -12,27 +12,10 @@ export interface User {
 
 export type UserRole = 'admin' | 'secretary' | 'user';
 
-// ==================== ADMIN & SECRETARY ====================
-export interface Admin {
-  email: string;
-  role: 'admin';
-  departments: Department[];
-  createdAt: Date;
-  updatedAt?: Date;
-}
-
-export interface Secretary {
-  email: string;
-  role: 'secretary';
-  departments: Department[];
-  createdBy: string;
-  createdAt: Date;
-}
-
 // ==================== DEPARTMENTS ====================
 export type Department = 'HR' | 'PR' | 'IT' | 'FR' | 'GENERAL';
 
-export const DEPARTMENTS: Department[] = ['HR', 'PR', 'IT', 'FR', 'GENERAL'];
+export type RequestDepartment = Exclude<Department, 'GENERAL'>;
 
 // ==================== TASKS ====================
 export interface DepartmentTask {
@@ -40,33 +23,31 @@ export interface DepartmentTask {
   department: Department;
   description: string;
   points: number;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 // ==================== POINT REQUESTS ====================
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
+// userEmail is the owner's lowercased email; their display name lives in members/{email}.
 export interface PointRequest {
   id: string;
-  userId: string;
   userEmail: string;
-  userName: string;
-  department: Department;
-  task: string;
-  eventDate?: string;
+  department: RequestDepartment;
+  taskId: string;
+  eventDate: string;
+  taskNumber: number;
   proofUrl?: string;
-  taskNumber: string | null;
-  details: string | null;
+  details?: string;
   status: RequestStatus;
   createdAt: Date;
   reviewedBy?: string;
   reviewedAt?: Date;
   adminComment?: string;
+  cancelledAt?: Date;
 }
 
 // ==================== TRANSFERS ====================
-export type TransferStatus = 'pending' | 'accepted' | 'rejected' | 'expired';
+export type TransferStatus = 'pending' | 'accepted' | 'rejected';
 
 export interface AdminTransfer {
   id: string;
@@ -76,10 +57,8 @@ export interface AdminTransfer {
   token: string;
   status: TransferStatus;
   createdAt: Date;
+  /** Derived: createdAt + VALIDATION.TRANSFER_EXPIRY_HOURS. Never stored. */
   expiresAt: Date;
-  acceptedAt?: Date;
-  rejectedAt?: Date;
-  rejectedBy?: string;
 }
 
 // ==================== LEADERBOARD ====================
@@ -91,10 +70,11 @@ export interface UserPoints {
 }
 
 export interface TaskSummary {
+  taskId: string;
   task: string;
   points: number;
-  count?: number;
-  basePoints?: number;
+  count: number;
+  basePoints: number;
 }
 
 // ==================== UI STATE ====================
@@ -111,10 +91,10 @@ export interface FilterConfig {
 
 // ==================== FORM DATA ====================
 export interface RequestFormData {
-  department: Department;
-  task: string;
-  eventDate?: string;
-  taskNumber?: string;
+  department: RequestDepartment;
+  taskId: string;
+  eventDate: string;
+  taskNumber: number;
   details?: string;
   proofUrl?: string;
 }

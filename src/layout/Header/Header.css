@@ -34,7 +34,7 @@
 .logo-container {
   display: flex;
   align-items: center;
-  padding-right: 300px;
+  padding-right: 0;
 }
 
 .logo {
@@ -67,7 +67,7 @@
 .nav-links {
   display: flex;
   list-style: none;
-  gap: 4rem;
+  gap: clamp(0.75rem, 3vw, 4rem);
   margin: 0;
   padding: 0;
 }

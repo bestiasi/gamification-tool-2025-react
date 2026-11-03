@@ -1,8 +1,11 @@
-import { useState } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
-import { auth, db } from '../firebase/config';
-import './RequestModal.css';
+import { VALIDATION } from '../constants';
+import { REQUEST_DEPARTMENTS } from '../constants/departments';
+import { useRequestForm } from '../hooks/useRequestForm';
+import { useDialogFocus } from '../hooks/useDialogFocus';
+import { validEventDate } from '../utils/scoring';
+import RequestDatePicker from './RequestDatePicker';
+import ui from '../styles/ui.module.css';
+import styles from './RequestModal.module.css';
 
 interface RequestModalProps {
   isOpen: boolean;
@@ -10,458 +13,91 @@ interface RequestModalProps {
   onSuccess: () => void;
 }
 
-type StepType = 'department' | 'task' | 'date' | 'details' | 'success';
-
 function RequestModal({ isOpen, onClose, onSuccess }: RequestModalProps) {
-  const [user] = useAuthState(auth);
-  const [currentStep, setCurrentStep] = useState<StepType>('department');
-  const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedTask, setSelectedTask] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [_selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [taskNumber, setTaskNumber] = useState('1');
-  const [details, setDetails] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [tasks, setTasks] = useState<string[]>([]);
-
-  const departments = ['HR', 'PR', 'IT', 'FR', 'GENERAL'];
-
-  const handleDepartmentSelect = async (dept: string) => {
-    setSelectedDepartment(dept);
-    setSelectedTask('');
-    
-    // Fetch tasks from Firestore departmentTasks collection
-    try {
-      console.log('Fetching tasks for department:', dept);
-      const tasksQuery = query(
-        collection(db, 'departmentTasks'),
-        where('department', '==', dept)
-      );
-      const tasksSnapshot = await getDocs(tasksQuery);
-      console.log('Found tasks:', tasksSnapshot.size);
-      
-      const taskList = tasksSnapshot.docs.map(doc => {
-        const data = doc.data();
-        console.log('Task:', data.description, data.points);
-        return `${data.description} (${data.points} puncte)`;
-      });
-      
-      if (taskList.length > 0) {
-        setTasks(taskList);
-      } else {
-        console.warn('No tasks found for department:', dept);
-        setError(`Nu există task-uri disponibile pentru departamentul ${dept}. Un admin trebuie să le adauge.`);
-        setTasks([]);
-      }
-    } catch (err) {
-      console.error('Error fetching tasks:', err);
-      setError('Eroare la încărcarea task-urilor. Te rog încearcă din nou.');
-      setTasks([]);
-    }
-    
-    setCurrentStep('task');
-  };
-
-  const handleTaskSelect = (task: string) => {
-    setSelectedTask(task);
-    setCurrentStep('date');
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedDepartment || !selectedTask || !eventDate) {
-      setError('Te rog completează toate câmpurile obligatorii!');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      console.log('🚀 Starting request submission...');
-
-      // Add request to Firestore
-      console.log('💾 Saving request to Firestore...');
-      const docRef = await addDoc(collection(db, 'pointRequests'), {
-        userId: user?.uid,
-        userEmail: user?.email,
-        userName: user?.displayName || user?.email?.split('@')[0],
-        department: selectedDepartment,
-        task: selectedTask,
-        eventDate: eventDate,
-        taskNumber: taskNumber || null,
-        details: details || null,
-        status: 'pending',
-        createdAt: serverTimestamp()
-      });
-      console.log('✅ Request saved with ID:', docRef.id);
-
-      // Call success callback to refresh the list
-      console.log('🔄 Refreshing requests list...');
-      onSuccess();
-      
-      // Close modal immediately
-      console.log('✨ Closing modal...');
-      resetForm();
-      onClose();
-      console.log('✅ Request submission complete!');
-    } catch (err: any) {
-      console.error('❌ Error submitting request:', err);
-      setError('Eroare la trimiterea cererii. Te rog încearcă din nou.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetForm = () => {
-    setCurrentStep('department');
-    setSelectedDepartment('');
-    setSelectedTask('');
-    setEventDate('');
-    setTaskNumber('1');
-    setDetails('');
-    setError('');
-  };
-
-  const handleBack = () => {
-    if (currentStep === 'task') setCurrentStep('department');
-    else if (currentStep === 'date') setCurrentStep('task');
-    else if (currentStep === 'details') setCurrentStep('date');
-  };
-
-  const handleNext = () => {
-    if (currentStep === 'date' && eventDate) setCurrentStep('details');
-  };
-
-  const getAvailableMonths = () => {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth(); // 0-11 (0=Jan, 8=Sep)
-    
-    const monthNames = [
-      'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
-      'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'
-    ];
-    
-    let availableMonths: { value: number; name: string; year: number }[] = [];
-    
-    if (currentMonth < 8) {
-      // Before September - show Sep-Dec from last year, Jan-current month this year
-      for (let m = 8; m < 12; m++) {
-        availableMonths.push({ value: m, name: monthNames[m], year: currentYear - 1 });
-      }
-      for (let m = 0; m <= currentMonth; m++) {
-        availableMonths.push({ value: m, name: monthNames[m], year: currentYear });
-      }
-    } else {
-      // September or later - show Sep-current month this year
-      for (let m = 8; m <= currentMonth; m++) {
-        availableMonths.push({ value: m, name: monthNames[m], year: currentYear });
-      }
-    }
-    
-    return availableMonths;
-  };
-
-  const getDaysInMonth = (month: number, year: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const getAvailableDays = (month: number, year: number) => {
-    const today = new Date();
-    const daysInMonth = getDaysInMonth(month, year);
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
-    const currentDay = today.getDate();
-    
-    // If selected month is current month, only show days up to today
-    if (year === currentYear && month === currentMonth) {
-      return Array.from({ length: currentDay }, (_, i) => i + 1);
-    }
-    
-    // Otherwise show all days in month
-    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  };
-
-  const handleMonthSelect = (month: number, year: number) => {
-    setSelectedMonth(month);
-    setSelectedDay(null);
-    
-    // Store year for later use
-    const yearStr = year.toString();
-    setEventDate(`${yearStr}-${String(month + 1).padStart(2, '0')}-`);
-  };
-
-  const handleDaySelect = (day: number) => {
-    setSelectedDay(day);
-    
-    const availableMonths = getAvailableMonths();
-    const selectedMonthData = availableMonths.find(m => m.value === selectedMonth);
-    
-    if (selectedMonthData) {
-      const yearStr = selectedMonthData.year.toString();
-      const monthStr = String(selectedMonth! + 1).padStart(2, '0');
-      const dayStr = String(day).padStart(2, '0');
-      setEventDate(`${yearStr}-${monthStr}-${dayStr}`);
-      setShowDatePicker(false);
-    }
-  };
-
-  const handleOpenDatePicker = () => {
-    setShowDatePicker(true);
-    setSelectedMonth(null);
-    setSelectedDay(null);
-  };
-
-  const getFormattedDate = (dateStr: string) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' });
-  };
+  const {
+    currentStep, selectedDepartment, selectedTask, tasks, loadingTasks, loading, error,
+    eventDate, setEventDate, taskNumber, setTaskNumber, details, setDetails,
+    handleDepartmentSelect, handleTaskSelect, handleBack, handleNext, handleClose, handleSubmit,
+  } = useRequestForm(onClose, onSuccess);
+  const dialog = useDialogFocus(isOpen, handleClose, currentStep);
 
   if (!isOpen) return null;
 
-  const handleCloseModal = () => {
-    if (loading) return; // Don't close while submitting
-    onClose();
-  };
-
   return (
-    <div className="modal-overlay" onClick={handleCloseModal}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={handleCloseModal} disabled={loading}>✕</button>
-        
-        <div className="modal-header">
-          <h2>📝 Cerere Nouă de Puncte</h2>
-          <div className="progress-dots">
-            <span className={currentStep === 'department' ? 'active' : 'completed'}>1</span>
-            <span className={currentStep === 'task' ? 'active' : currentStep === 'date' || currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>2</span>
-            <span className={currentStep === 'date' ? 'active' : currentStep === 'details' || currentStep === 'success' ? 'completed' : ''}>3</span>
-            <span className={currentStep === 'details' ? 'active' : currentStep === 'success' ? 'completed' : ''}>4</span>
+    <div className={styles['modal-overlay']} onClick={handleClose}>
+      <div ref={dialog} tabIndex={-1} aria-modal="true" className={styles['modal-content']} role="dialog" aria-labelledby="request-modal-title"
+        onClick={event => event.stopPropagation()}>
+        <button type="button" className={`${ui.button} ${ui.iconButton} ${styles['modal-close']}`}
+          aria-label="Închide formularul" onClick={handleClose} disabled={loading}>×</button>
+        <div className={styles['modal-header']}>
+          <h2 id="request-modal-title">Cerere Nouă de Puncte</h2>
+          <div className={styles['progress-dots']}>
+            <span className={currentStep === 'department' ? styles.active : styles.completed}>1</span>
+            <span className={currentStep === 'task' ? styles.active : currentStep === 'date' || currentStep === 'details' ? styles.completed : ''}>2</span>
+            <span className={currentStep === 'date' ? styles.active : currentStep === 'details' ? styles.completed : ''}>3</span>
+            <span className={currentStep === 'details' ? styles.active : ''}>4</span>
           </div>
         </div>
-
-        <div className="modal-body">
+        <div className={styles['modal-body']}>
+          {error && <div className={`${ui.notice} ${styles['error-message']}`} role="alert">{error}</div>}
           {currentStep === 'department' && (
-            <div className="step-section">
+            <div className={styles['step-section']}>
               <h3>Selectează Departamentul</h3>
-              <div className="department-grid">
-                {departments.map((dept) => (
-                  <button
-                    key={dept}
-                    className={`dept-btn ${selectedDepartment === dept ? 'selected' : ''}`}
-                    onClick={() => handleDepartmentSelect(dept)}
-                  >
-                    {dept}
+              <div className={styles['department-grid']}>
+                {REQUEST_DEPARTMENTS.map(department => (
+                  <button type="button" key={department} className={`${ui.button} ${styles['dept-btn']} ${selectedDepartment === department ? styles.selected : ''}`}
+                    onClick={() => handleDepartmentSelect(department)}>
+                    {department}
                   </button>
                 ))}
               </div>
             </div>
           )}
-
           {currentStep === 'task' && (
-            <div className="step-section">
+            <div className={styles['step-section']}>
               <h3>Selectează Task-ul</h3>
-              {tasks.length === 0 ? (
-                <div style={{ 
-                  padding: '20px', 
-                  background: '#fff3cd', 
-                  border: '1px solid #ffc107',
-                  borderRadius: '8px',
-                  color: '#856404',
-                  textAlign: 'center',
-                  marginBottom: '20px'
-                }}>
-                  <strong>⚠️ Nu există task-uri disponibile pentru departamentul {selectedDepartment}.</strong>
-                </div>
-              ) : (
-                <div className="task-list">
-                  {tasks.map((task) => (
-                    <button
-                      key={task}
-                      className={`task-btn ${selectedTask === task ? 'selected' : ''}`}
-                      onClick={() => handleTaskSelect(task)}
-                    >
-                      {task}
+              {loadingTasks ? <p role="status">Se încarcă task-urile...</p> : (
+                <div className={styles['task-list']}>
+                  {tasks.map(task => (
+                    <button type="button" key={task.id} className={`${ui.button} ${styles['task-btn']} ${selectedTask === task.id ? styles.selected : ''}`}
+                      onClick={() => handleTaskSelect(task.id)}>
+                      {task.description} ({task.points} puncte)
                     </button>
                   ))}
                 </div>
               )}
-              <button 
-                className="back-btn-single" 
-                onClick={handleBack}
-              >
-                ← Înapoi
-              </button>
+              <p className={styles['scoring-note']}>Punctajul cererilor aprobate se recalculează folosind valoarea actuală a task-ului.</p>
+              <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={handleBack}>Înapoi</button>
             </div>
           )}
-
           {currentStep === 'date' && (
-            <div className="step-section">
+            <div className={styles['step-section']}>
               <h3>Data Evenimentului</h3>
-              <p className="step-description">Când a avut loc activitatea?</p>
-              
-              <div className="date-display-wrapper">
-                <div className="date-display" onClick={handleOpenDatePicker}>
-                  {eventDate ? getFormattedDate(eventDate) : '📅 Selectează Data'}
-                </div>
-                <button 
-                  type="button"
-                  className="today-btn"
-                  onClick={() => {
-                    const today = new Date().toISOString().split('T')[0];
-                    setEventDate(today);
-                    setShowDatePicker(false);
-                  }}
-                >
-                  📅 Astăzi
-                </button>
-              </div>
-
-              {showDatePicker && (
-                <div className="custom-date-picker">
-                  <div className="date-picker-header">
-                    <h4>{selectedMonth === null ? 'Selectează Luna' : 'Selectează Ziua'}</h4>
-                    <button 
-                      type="button"
-                      className="close-picker-btn"
-                      onClick={() => setShowDatePicker(false)}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  
-                  {selectedMonth === null ? (
-                    <div className="month-grid">
-                      {getAvailableMonths().map((month) => (
-                        <button
-                          key={`${month.year}-${month.value}`}
-                          type="button"
-                          className="month-btn"
-                          onClick={() => handleMonthSelect(month.value, month.year)}
-                        >
-                          {month.name} {month.year}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <>
-                      <button 
-                        type="button"
-                        className="back-to-months-btn"
-                        onClick={() => setSelectedMonth(null)}
-                      >
-                        ← Înapoi la Luni
-                      </button>
-                      <div className="weekdays-header">
-                        <span>L</span>
-                        <span>M</span>
-                        <span>M</span>
-                        <span>J</span>
-                        <span>V</span>
-                        <span>S</span>
-                        <span>D</span>
-                      </div>
-                      <div className="day-grid">
-                        {(() => {
-                          const year = getAvailableMonths().find(m => m.value === selectedMonth)?.year || new Date().getFullYear();
-                          const firstDay = new Date(year, selectedMonth, 1).getDay();
-                          const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1; // Monday = 0, Sunday = 6
-                          const days = getAvailableDays(selectedMonth, year);
-                          const emptySlots = Array(adjustedFirstDay).fill(null);
-                          
-                          return [...emptySlots, ...days].map((day, index) => (
-                            day === null ? (
-                              <div key={`empty-${index}`} className="day-empty"></div>
-                            ) : (
-                              <button
-                                key={day}
-                                type="button"
-                                className="day-btn"
-                                onClick={() => handleDaySelect(day)}
-                              >
-                                {day}
-                              </button>
-                            )
-                          ));
-                        })()}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
-              <div className="button-row">
-                <button className="back-btn-inline" onClick={handleBack}>
-                  ← Înapoi
-                </button>
-                <button 
-                  className="next-btn-inline"
-                  onClick={handleNext}
-                  disabled={!eventDate}
-                >
-                  Următorul Pas →
+              <p className={styles['step-description']}>Când a avut loc activitatea?</p>
+              <RequestDatePicker value={eventDate} onChange={setEventDate} />
+              <div className={styles['button-row']}>
+                <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={handleBack}>Înapoi</button>
+                <button type="button" className={`${ui.button} ${ui.primary}`} onClick={handleNext} disabled={!validEventDate(eventDate)}>
+                  Următorul Pas
                 </button>
               </div>
             </div>
           )}
-
           {currentStep === 'details' && (
-            <div className="step-section">
+            <div className={styles['step-section']}>
               <h3>Detalii Suplimentare</h3>
-              <input
-                type="number"
-                placeholder="Număr de repetări (câte ori ai făcut task-ul)"
-                value={taskNumber}
-                onChange={(e) => setTaskNumber(e.target.value)}
-                className="number-input"
-                min="1"
-              />
-              <textarea
-                placeholder="Detalii în plus legate de task pe care vrei să le zici!"
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                className="details-textarea"
-                rows={4}
-              />
-              
-              {error && <div className="error-message">{error}</div>}
-              
-              <div className="button-row">
-                <button className="back-btn-inline" onClick={handleBack}>
-                  ← Înapoi
-                </button>
-                <button 
-                  className="submit-btn-inline"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                >
-                  {loading ? 'Se trimite...' : '✓ Trimite Cererea'}
+              <label htmlFor="request-repetitions">Număr de repetări</label>
+              <input id="request-repetitions" type="number"
+                value={taskNumber} onChange={event => setTaskNumber(event.target.value)} className={ui.field} min="1" max={VALIDATION.MAX_REPETITIONS} step="1" />
+              <label htmlFor="request-details">Detalii (opțional)</label>
+              <textarea id="request-details" placeholder="Descrie pe scurt activitatea"
+                value={details} onChange={event => setDetails(event.target.value)} className={`${ui.field} ${styles['details-textarea']}`} rows={4} />
+              <div className={styles['button-row']}>
+                <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={handleBack}>Înapoi</button>
+                <button type="button" className={`${ui.button} ${ui.primary}`} onClick={handleSubmit} disabled={loading}>
+                  {loading ? 'Se trimite...' : 'Trimite Cererea'}
                 </button>
               </div>
-            </div>
-          )}
-
-          {currentStep === 'success' && (
-            <div className="step-section success-screen">
-              <div className="success-icon">✅</div>
-              <h3>Cerere Trimisă cu Succes!</h3>
-              <p>Cererea ta a fost trimisă și este în așteptarea aprobării.</p>
-              <p className="success-details">
-                <strong>Departament:</strong> {selectedDepartment}<br />
-                <strong>Task:</strong> {selectedTask}
-              </p>
-              <button 
-                className="close-success-btn"
-                onClick={() => {
-                  resetForm();
-                  onClose();
-                }}
-              >
-                Închide
-              </button>
             </div>
           )}
         </div>

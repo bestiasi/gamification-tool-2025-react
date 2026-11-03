@@ -1,47 +1,63 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
-import Login from './pages/Login/Login';
-import Welcome from './pages/Welcome/Welcome';
-import Success from './pages/Success/Success';
-import Admin from './pages/Admin';
-import AdminTransfer from './pages/AdminTransfer';
-import AdminSetup from './pages/AdminSetup';
-import AcceptTransfer from './pages/AcceptTransfer';
-import Requests from './pages/Requests';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomeRedirect from './components/HomeRedirect';
+import PageErrorBoundary from './components/PageErrorBoundary';
+import { departmentPages } from './constants/departments';
+import { loginDestination, loginPath } from './utils/navigation';
+import ui from './styles/ui.module.css';
 
-// Import department pages
-import HR from './pages/HR/index.tsx';
-import IT from './pages/IT/index.tsx';
-import PR from './pages/PR/index.tsx';
-import FR from './pages/FR/index.tsx';
+// Keep unscoped legacy styles in their original order while route code loads on demand.
+import './pages/Login/Login.css';
+import './pages/Welcome/Welcome.css';
+import './pages/Success/Success.css';
+import './pages/Admin/Admin.css';
+import './pages/AdminTransfer/AdminTransfer.css';
+import './pages/AdminSetup/AdminSetup.css';
+import './pages/AcceptTransfer/AcceptTransfer.css';
+import './App.css';
+
+const Login = lazy(() => import('./pages/Login/Login'));
+const Welcome = lazy(() => import('./pages/Welcome/Welcome'));
+const Success = lazy(() => import('./pages/Success/Success'));
+const Admin = lazy(() => import('./pages/Admin/Admin'));
+const AdminTransfer = lazy(() => import('./pages/AdminTransfer/AdminTransfer'));
+const AdminSetup = lazy(() => import('./pages/AdminSetup/AdminSetup'));
+const AcceptTransfer = lazy(() => import('./pages/AcceptTransfer/AcceptTransfer'));
+const Requests = lazy(() => import('./pages/Requests/Requests'));
+const DepartmentPage = lazy(() => import('./pages/Department/DepartmentPage'));
 
 function AppRoutes() {
-  const { user } = useAuth();
+  const { user, roleError, retryRoles } = useAuth();
+  const location = useLocation();
 
   return (
     <>
       <Header 
         logo="/icons/logo best.png"
         links={[
-          { text: 'HR', url: '/hr' },
-          { text: 'PR', url: '/pr' },
-          { text: 'IT', url: '/it' },
-          { text: 'FR', url: '/fr' },
+          ...departmentPages.map(({ department, path }) => ({ text: department, url: path })),
           { text: 'REQUESTS', url: '/requests' },
           { text: 'ADMIN', url: '/admin' }
         ]}
       />
       
-      <Routes>
+      <PageErrorBoundary>
+      <Suspense fallback={<main role="status" style={{ padding: 40, textAlign: 'center' }}>Se încarcă pagina...</main>}>
+      {roleError ? (
+        <main className={ui.page} role="alert">
+          <p>Permisiunile nu au putut fi încărcate: {roleError}</p>
+          <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={retryRoles}>Reîncearcă</button>
+        </main>
+      ) : <Routes>
         {!user ? (
           // Not logged in - show only login
           <>
             <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to={loginPath(location.pathname + location.search + location.hash)} replace />} />
           </>
         ) : (
           // Logged in - show all pages
@@ -61,31 +77,19 @@ function AppRoutes() {
                 <Success />
               </ProtectedRoute>
             } />
-            <Route path="/hr" element={
-              <ProtectedRoute>
-                <HR />
-              </ProtectedRoute>
-            } />
-            <Route path="/it" element={
-              <ProtectedRoute>
-                <IT />
-              </ProtectedRoute>
-            } />
-            <Route path="/pr" element={
-              <ProtectedRoute>
-                <PR />
-              </ProtectedRoute>
-            } />
-            <Route path="/fr" element={
-              <ProtectedRoute>
-                <FR />
-              </ProtectedRoute>
-            } />
+            {departmentPages.map(({ department, path }) => (
+              <Route key={path} path={path} element={
+                <ProtectedRoute>
+                  <DepartmentPage key={department} department={department} />
+                </ProtectedRoute>
+              } />
+            ))}
             <Route path="/requests" element={
               <ProtectedRoute>
-                <Requests />
+                <Requests key={user.uid} />
               </ProtectedRoute>
             } />
+            <Route path="/my-requests" element={<Navigate to="/requests" replace />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <Admin />
@@ -106,11 +110,13 @@ function AppRoutes() {
                 <AdminSetup />
               </ProtectedRoute>
             } />
-            <Route path="/login" element={<Navigate to="/welcome" replace />} />
+            <Route path="/login" element={<Navigate to={loginDestination(location.search)} replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         )}
-      </Routes>
+      </Routes>}
+      </Suspense>
+      </PageErrorBoundary>
       
       <Footer />
     </>

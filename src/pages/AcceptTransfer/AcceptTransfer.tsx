@@ -1,269 +1,100 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { 
-  doc, 
-  getDoc, 
-  updateDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { auth, db } from '../../firebase/config';
+import { useAuth } from '../../contexts/AuthContext';
+import { acceptTransfer, getTransferById, rejectTransfer } from '../../services/transferService';
+import type { AdminTransfer } from '../../models';
+import { formatDateTime } from '../../utils';
 import './AcceptTransfer.css';
 
-function AcceptTransfer() {
-  const [user] = useAuthState(auth);
-  const [searchParams] = useSearchParams();
+export default function AcceptTransfer() {
+  const { user } = useAuth();
+  const [params] = useSearchParams();
   const navigate = useNavigate();
+  const id = params.get('id') ?? '';
+  const token = params.get('token') ?? '';
+  const [transfer, setTransfer] = useState<AdminTransfer | null>(null);
   const [loading, setLoading] = useState(true);
-  const [accepting, setAccepting] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [transfer, setTransfer] = useState<any>(null);
-
-  const transferId = searchParams.get('id');
-  const token = searchParams.get('token');
+  const [outcome, setOutcome] = useState<'accepted' | 'rejected' | null>(null);
+  const [revision, setRevision] = useState(0);
+  const running = useRef(false);
+  const validationRevision = useRef(0);
+  const invalidateValidation = useCallback(() => { validationRevision.current++; }, []);
 
   useEffect(() => {
-    if (user && transferId && token) {
-      validateTransfer();
-    }
-  }, [user, transferId, token]);
+    if (!outcome) return;
+    const timer = window.setTimeout(() => navigate(outcome === 'accepted' ? '/admin' : '/'), 3000);
+    return () => window.clearTimeout(timer);
+  }, [outcome, navigate]);
 
-  const validateTransfer = async () => {
-    if (!transferId || !token) {
+  useEffect(() => {
+    invalidateValidation();
+    let active = true;
+    setTransfer(null);
+    setError('');
+    setOutcome(null);
+    if (!id || id.includes('/') || !token) {
       setError('Link invalid - lipsește ID-ul sau token-ul.');
       setLoading(false);
       return;
     }
+    setLoading(true);
+    getTransferById(id, token).then(transfer => {
+      if (active) setTransfer(transfer);
+    }).catch((error: unknown) => {
+      console.error('Error validating transfer:', error);
+      if (active) setError(error instanceof Error ? error.message : 'Transferul nu a putut fi verificat.');
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; invalidateValidation(); };
+  }, [id, token, user?.uid, revision, invalidateValidation]);
 
-    try {
-      const transferDoc = await getDoc(doc(db, 'adminTransfers', transferId));
-      
-      if (!transferDoc.exists()) {
-        setError('Cererea de transfer nu a fost găsită.');
-        setLoading(false);
-        return;
-      }
-
-      const transferData = transferDoc.data();
-
-      // Verify token
-      if (transferData.token !== token) {
-        setError('Token invalid. Link-ul este incorect.');
-        setLoading(false);
-        return;
-      }
-
-      // Check if expired
-      const expiresAt = transferData.expiresAt?.toDate();
-      if (expiresAt && expiresAt < new Date()) {
-        await updateDoc(doc(db, 'adminTransfers', transferId), {
-          status: 'expired'
-        });
-        setError('Link-ul a expirat. Cere un link nou de la adminul curent.');
-        setLoading(false);
-        return;
-      }
-
-      // Check if already accepted
-      if (transferData.status === 'accepted') {
-        setError('Acest transfer a fost deja acceptat.');
-        setLoading(false);
-        return;
-      }
-
-      // Verify user email matches
-      if (user?.email !== transferData.toEmail) {
-        setError(`Trebuie să fii logat cu emailul ${transferData.toEmail} pentru a accepta acest transfer. Actualmente ești logat cu ${user?.email}.`);
-        setLoading(false);
-        return;
-      }
-
-      // All validations passed
-      setTransfer({
-        id: transferId,
-        ...transferData
-      });
-      setLoading(false);
-    } catch (err: any) {
-      setError('Eroare la verificarea transferului: ' + err.message);
-      setLoading(false);
-    }
-  };
-
-  const handleRejectTransfer = async () => {
-    setAccepting(true);
+  const respond = async (outcome: 'accepted' | 'rejected') => {
+    if (running.current) return;
+    running.current = true;
+    const currentRevision = validationRevision.current;
+    setBusy(true);
     setError('');
-
     try {
-      await updateDoc(doc(db, 'adminTransfers', transferId!), {
-        status: 'rejected',
-        rejectedAt: serverTimestamp(),
-        rejectedBy: user?.email
-      });
-
-      setMessage(`❌ Transfer refuzat. Adminul ${transfer.fromEmail} va rămâne responsabil pentru departamentul ${transfer.department}.`);
-      
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
-    } catch (err: any) {
-      setError('Eroare la refuzarea transferului: ' + err.message);
+      if (outcome === 'accepted') await acceptTransfer(id, token);
+      else await rejectTransfer(id, token);
+      if (currentRevision === validationRevision.current) setOutcome(outcome);
+    } catch (error) {
+      console.error('Error responding to transfer:', error);
+      if (currentRevision === validationRevision.current) {
+        setError(error instanceof Error ? error.message : 'Transferul nu a putut fi procesat.');
+      }
     } finally {
-      setAccepting(false);
+      running.current = false;
+      setBusy(false);
     }
   };
-
-  const handleAcceptTransfer = async () => {
-    setAccepting(true);
-    setError('');
-
-    try {
-      // Add new admin
-      const newAdminRef = doc(db, 'admins', transfer.toEmail);
-      const newAdminDoc = await getDoc(newAdminRef);
-      
-      if (newAdminDoc.exists()) {
-        const existingDepts = newAdminDoc.data().departments || [];
-        if (!existingDepts.includes(transfer.department)) {
-          existingDepts.push(transfer.department);
-        }
-        await updateDoc(newAdminRef, {
-          departments: existingDepts,
-          updatedAt: serverTimestamp()
-        });
-      } else {
-        await updateDoc(newAdminRef, {
-          departments: [transfer.department],
-          email: transfer.toEmail,
-          createdAt: serverTimestamp()
-        });
-      }
-
-      // Remove department from old admin
-      const oldAdminRef = doc(db, 'admins', transfer.fromEmail);
-      const oldAdminDoc = await getDoc(oldAdminRef);
-      
-      if (oldAdminDoc.exists()) {
-        const depts = oldAdminDoc.data().departments || [];
-        const updatedDepts = depts.filter((d: string) => d !== transfer.department);
-        
-        if (updatedDepts.length > 0) {
-          await updateDoc(oldAdminRef, {
-            departments: updatedDepts,
-            updatedAt: serverTimestamp()
-          });
-        } else {
-          // Remove admin doc if no departments left
-          await updateDoc(oldAdminRef, {
-            departments: [],
-            removedAt: serverTimestamp()
-          });
-        }
-      }
-
-      // Mark transfer as accepted
-      await updateDoc(doc(db, 'adminTransfers', transferId!), {
-        status: 'accepted',
-        acceptedAt: serverTimestamp()
-      });
-
-      setMessage(`✅ Transfer acceptat cu succes! Ai devenit admin pentru departamentul ${transfer.department}.`);
-      
-      // Redirect to admin panel after 3 seconds
-      setTimeout(() => {
-        navigate('/admin');
-      }, 3000);
-    } catch (err: any) {
-      setError('Eroare la acceptarea transferului: ' + err.message);
-    } finally {
-      setAccepting(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="accept-transfer-page">
-        <div className="accept-transfer-container">
-          <div className="accept-transfer-content">
-            <h1>⏳ Se verifică...</h1>
-            <p>Se validează link-ul de transfer...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="accept-transfer-page">
-        <div className="accept-transfer-container">
-          <div className="accept-transfer-content">
-            <h1>❌ Eroare</h1>
-            <div className="transfer-error">{error}</div>
-            <button 
-              className="back-button"
-              onClick={() => navigate('/admin')}
-            >
-              🏠 Înapoi la Admin
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (message) {
-    return (
-      <div className="accept-transfer-page">
-        <div className="accept-transfer-container">
-          <div className="accept-transfer-content">
-            <h1>✅ Success</h1>
-            <div className="transfer-success">{message}</div>
-            <p className="redirect-message">Vei fi redirecționat către panoul de admin...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="accept-transfer-page">
-      <div className="accept-transfer-container">
-        <div className="accept-transfer-content">
-          <h1>🔄 Ofertă de Transfer Admin</h1>
-          
-          <div className="transfer-details">
-            <p><strong>De la:</strong> {transfer?.fromEmail}</p>
-            <p><strong>Departament:</strong> {transfer?.department}</p>
-            <p><strong>Către:</strong> {transfer?.toEmail}</p>
-            <p><strong>Expiră:</strong> {transfer?.expiresAt?.toDate().toLocaleString('ro-RO')}</p>
-          </div>
-
-          <div className="warning-box">
-            <p>⚠️ Prin acceptarea acestei oferte vei deveni admin pentru departamentul <strong>{transfer?.department}</strong>.</p>
-            <p>Adminul curent <strong>{transfer?.fromEmail}</strong> va pierde accesul de admin pentru acest departament.</p>
-          </div>
-
-          <button 
-            className="accept-button"
-            onClick={handleAcceptTransfer}
-            disabled={accepting}
-          >
-            {accepting ? '⏳ Se acceptă...' : '✅ Acceptă Oferta'}
-          </button>
-
-          <button 
-            className="cancel-button"
-            onClick={handleRejectTransfer}
-            disabled={accepting}
-          >
-            {accepting ? '⏳ Se procesează...' : '❌ Refuză Oferta'}
-          </button>
-        </div>
-      </div>
-    </div>
+    <main className="accept-transfer-page">
+      <div className="accept-transfer-container"><div className="accept-transfer-content">
+        {loading ? <p role="status">Se verifică link-ul de transfer...</p> : outcome ? <>
+          <h1>{outcome === 'accepted' ? 'Transfer acceptat' : 'Transfer refuzat'}</h1>
+          <p role="status">{outcome === 'accepted' ? 'Permisiunile au fost transferate.' : 'Permisiunile expeditorului nu s-au schimbat.'}</p>
+          <button type="button" className="back-button" onClick={() => navigate(outcome === 'accepted' ? '/admin' : '/')}>Continuă</button>
+        </> : <>
+          <h1>Transfer Admin</h1>
+          {error && <div role="alert" className="transfer-error">
+            <p>{error}</p>
+            <button type="button" onClick={() => setRevision(value => value + 1)} disabled={busy}>Reîncearcă verificarea</button>
+          </div>}
+          {transfer && !error && <>
+            <div className="transfer-details">
+              <p>De la: {transfer.fromEmail}</p><p>Către: {transfer.toEmail}</p>
+              <p>Departament: {transfer.department}</p><p>Expiră: {formatDateTime(transfer.expiresAt)}</p>
+            </div>
+            <p>Prin acceptare primești rolul, iar expeditorul pierde departamentul transferat.</p>
+            <button type="button" className="accept-button" disabled={busy} onClick={() => void respond('accepted')}>Acceptă Oferta</button>
+            <button type="button" className="cancel-button" disabled={busy} onClick={() => void respond('rejected')}>Refuză Oferta</button>
+          </>}
+          <button type="button" className="back-button" disabled={busy} onClick={() => navigate('/')}>Înapoi</button>
+        </>}
+      </div></div>
+    </main>
   );
 }
-
-export default AcceptTransfer;

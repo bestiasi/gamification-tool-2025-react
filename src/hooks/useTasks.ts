@@ -3,7 +3,9 @@
  * Custom hook for managing department tasks
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { db } from '../firebase/config';
+import { subscribeToTaskCatalog } from '../services/taskCatalog';
 import type { DepartmentTask, Department, TaskFormData } from '../models';
 import {
   getDepartmentTasks,
@@ -12,57 +14,85 @@ import {
   deleteTask,
 } from '../services';
 
+export const useTaskCatalog = (enabled = true) => {
+  const [tasks, setTasks] = useState<DepartmentTask[]>([]);
+  const [loading, setLoading] = useState(enabled);
+  const [error, setError] = useState('');
+  const [revision, setRevision] = useState(0);
+  const retry = useCallback(() => setRevision(value => value + 1), []);
+
+  useEffect(() => {
+    setTasks([]);
+    setError('');
+    setLoading(enabled);
+    if (!enabled) return;
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    const stop = () => { active = false; unsubscribe?.(); };
+    try {
+      unsubscribe = subscribeToTaskCatalog(db, catalog => {
+        if (!active) return;
+        setTasks(catalog);
+        setError('');
+        setLoading(false);
+      }, (error, fromCache) => {
+        if (!active) return;
+        console.error('Error subscribing to task catalog:', error);
+        if (!fromCache) stop();
+        setTasks([]);
+        setError(error.message);
+        setLoading(false);
+      });
+    } catch (error) {
+      stop();
+      console.error('Error subscribing to task catalog:', error);
+      setError(error instanceof Error ? error.message : String(error));
+      setLoading(false);
+    }
+    return stop;
+  }, [enabled, revision]);
+
+  return { tasks, loading, error, retry };
+};
+
 export const useTasks = (department?: Department) => {
   const [tasks, setTasks] = useState<DepartmentTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [revision, setRevision] = useState(0);
 
-  const fetchTasks = useCallback(async (dept?: Department) => {
-    const targetDept = dept || department;
-    if (!targetDept) return;
+  const fetchTasks = useCallback(() => setRevision(value => value + 1), []);
 
-    setLoading(true);
+  useEffect(() => {
+    let active = true;
+    setTasks([]);
     setError('');
-
-    try {
-      const fetchedTasks = await getDepartmentTasks(targetDept);
-      setTasks(fetchedTasks);
-    } catch (err: any) {
-      setError(err.message || 'Error fetching tasks');
-      console.error('Error fetching tasks:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [department]);
+    setLoading(Boolean(department));
+    if (!department) return;
+    getDepartmentTasks(department).then(fetchedTasks => {
+      if (active) setTasks(fetchedTasks);
+    }).catch((error: unknown) => {
+      console.error('Error fetching tasks:', error);
+      if (active) setError(error instanceof Error ? error.message : 'Eroare la încărcarea task-urilor.');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [department, revision]);
 
   const create = async (formData: TaskFormData) => {
-    try {
-      await createTask(formData);
-      await fetchTasks(formData.department);
-    } catch (err: any) {
-      setError(err.message || 'Error creating task');
-      throw err;
-    }
+    await createTask(formData);
+    fetchTasks();
   };
 
   const update = async (taskId: string, description: string, points: number) => {
-    try {
-      await updateTask(taskId, description, points);
-      await fetchTasks();
-    } catch (err: any) {
-      setError(err.message || 'Error updating task');
-      throw err;
-    }
+    await updateTask(taskId, description, points);
+    fetchTasks();
   };
 
   const remove = async (taskId: string) => {
-    try {
-      await deleteTask(taskId);
-      await fetchTasks();
-    } catch (err: any) {
-      setError(err.message || 'Error deleting task');
-      throw err;
-    }
+    await deleteTask(taskId);
+    fetchTasks();
   };
 
   return {

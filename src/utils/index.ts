@@ -8,7 +8,9 @@ import { VALIDATION } from '../constants';
 // ==================== DATE UTILITIES ====================
 export const formatDate = (date: Date | string): string => {
   if (!date) return '';
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string'
+    ? new Date(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(date) ? `${date}T00:00:00` : date)
+    : date;
   return d.toLocaleDateString('ro-RO');
 };
 
@@ -16,16 +18,6 @@ export const formatDateTime = (date: Date | string): string => {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleString('ro-RO');
-};
-
-export const isDateExpired = (expiryDate: Date): boolean => {
-  return expiryDate < new Date();
-};
-
-export const addHours = (date: Date, hours: number): Date => {
-  const newDate = new Date(date);
-  newDate.setHours(newDate.getHours() + hours);
-  return newDate;
 };
 
 // ==================== VALIDATION UTILITIES ====================
@@ -74,10 +66,7 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
 };
 
 // ==================== TOKEN UTILITIES ====================
-export const generateToken = (): string => {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
-};
+export const generateToken = (): string => crypto.randomUUID().split('-').join('');
 
 // ==================== URL UTILITIES ====================
 export const buildAcceptanceLink = (baseUrl: string, id: string, token: string): string => {
@@ -110,11 +99,4 @@ export const groupBy = <T>(array: T[], key: keyof T): Record<string, T[]> => {
     result[groupKey].push(item);
     return result;
   }, {} as Record<string, T[]>);
-};
-
-// ==================== FIRESTORE UTILITIES ====================
-export const timestampToDate = (timestamp: any): Date => {
-  if (!timestamp) return new Date();
-  if (timestamp.toDate) return timestamp.toDate();
-  return new Date(timestamp);
 };

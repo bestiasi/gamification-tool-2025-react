@@ -1,84 +1,86 @@
-/**
- * Leaderboard Service
- * Handles leaderboard calculations and user points
- */
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import type { Firestore, Unsubscribe } from 'firebase/firestore';
+import type { Department, DepartmentTask } from '../models';
+import { COLLECTIONS } from '../constants/index.ts';
+import { aggregateApprovedRequests } from '../utils/scoring.ts';
+import type { LeaderboardResult, ScorableRequest } from '../utils/scoring.ts';
+import { subscribeToTaskCatalog } from './taskCatalog.ts';
+import { subscribeToMemberNames, type MemberNames } from './memberService.ts';
+import { academicYearStart } from '../utils/requestCalendar.ts';
 
-import type { PointRequest, UserPoints, Department } from '../models';
-import { getApprovedRequestsByDepartment } from './requestService';
-import { getDepartmentTasks } from './taskService';
+export interface DepartmentLeaderboard extends LeaderboardResult {
+  tasks: DepartmentTask[];
+}
 
-/**
- * Calculate user points from approved requests
- */
-export const calculateUserPoints = async (department: Department): Promise<UserPoints[]> => {
+export const subscribeToLeaderboard = (
+  database: Firestore,
+  department: Department,
+  onChange: (data: DepartmentLeaderboard) => void,
+  onError: (error: Error) => void,
+): Unsubscribe => {
+  let active = true;
+  const since = academicYearStart();
+  let requests: ScorableRequest[] | undefined;
+  let tasks: DepartmentTask[] | undefined;
+  let names: MemberNames | undefined;
+  let stopRequests: Unsubscribe | undefined;
+  let stopTasks: Unsubscribe | undefined;
+  let stopNames: Unsubscribe | undefined;
+  const stop = () => {
+    active = false;
+    stopRequests?.();
+    stopTasks?.();
+    stopNames?.();
+  };
+  const fail = (error: unknown, fromCache = false) => {
+    if (!active) return;
+    // Keep listening for a server correction when only the cached data is invalid.
+    if (!fromCache) stop();
+    onError(error instanceof Error ? error : new Error(String(error)));
+  };
+  const publish = () => {
+    if (active && requests && tasks && names) {
+      onChange({ ...aggregateApprovedRequests(requests, tasks, names), tasks });
+    }
+  };
+
   try {
-    // Fetch approved requests
-    const requests = await getApprovedRequestsByDepartment(department);
-    
-    // Fetch department tasks to get points map
-    const tasks = await getDepartmentTasks(department);
-    const taskPointsMap = new Map<string, number>();
-    
-    tasks.forEach(task => {
-      taskPointsMap.set(task.description, task.points);
-    });
-
-    // Calculate points per user
-    const userPointsMap = new Map<string, UserPoints>();
-
-    requests.forEach((request: PointRequest) => {
-      const userEmail = request.userEmail;
-      const userName = request.userName;
-      const taskDescription = request.task || 'Task nespecificat';
-      const taskNumber = parseInt(request.taskNumber || '1');
-      
-      // Get base points for task
-      const basePoints = taskPointsMap.get(taskDescription) || 0;
-      const pointsEarned = basePoints * taskNumber;
-
-      if (!userPointsMap.has(userEmail)) {
-        userPointsMap.set(userEmail, {
-          name: userName,
-          email: userEmail,
-          totalPoints: 0,
-          tasks: [],
+    stopRequests = onSnapshot(query(
+      collection(database, COLLECTIONS.POINT_REQUESTS),
+      where('department', '==', department),
+      where('status', '==', 'approved'),
+    ), { includeMetadataChanges: true }, snapshot => {
+      if (!active) return;
+      requests = undefined;
+      try {
+        requests = snapshot.docs.filter(document => document.data().eventDate >= since).map(document => {
+          const data = document.data();
+          return {
+            id: document.id, department, status: 'approved',
+            taskId: data.taskId, taskNumber: data.taskNumber,
+            userEmail: data.userEmail,
+          };
         });
+        publish();
+      } catch (error) {
+        fail(error, snapshot.metadata.fromCache);
       }
-
-      const userPoints = userPointsMap.get(userEmail)!;
-      userPoints.totalPoints += pointsEarned;
-
-      // Find or create task entry
-      const existingTask = userPoints.tasks.find(t => t.task === taskDescription);
-      if (existingTask) {
-        existingTask.count = (existingTask.count || 0) + taskNumber;
-        existingTask.points += pointsEarned;
-      } else {
-        userPoints.tasks.push({
-          task: taskDescription,
-          points: pointsEarned,
-          count: taskNumber,
-          basePoints,
-        });
-      }
-    });
-
-    // Convert to array and sort by total points
-    const leaderboard = Array.from(userPointsMap.values());
-    leaderboard.sort((a, b) => b.totalPoints - a.totalPoints);
-
-    return leaderboard;
+    }, fail);
+    stopTasks = subscribeToTaskCatalog(database, catalog => {
+      if (!active) return;
+      tasks = catalog;
+      publish();
+    }, (error, fromCache) => {
+      tasks = undefined;
+      fail(error, fromCache);
+    }, department);
+    stopNames = subscribeToMemberNames(database, memberNames => {
+      if (!active) return;
+      names = memberNames;
+      publish();
+    }, fail);
   } catch (error) {
-    console.error('Error calculating user points:', error);
-    throw error;
+    fail(error);
   }
-};
-
-/**
- * Get top users across all departments
- */
-export const getGlobalLeaderboard = async (): Promise<UserPoints[]> => {
-  // This would require fetching all departments
-  // For now, return empty array as it's not currently used
-  return [];
+  return stop;
 };

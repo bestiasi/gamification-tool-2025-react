@@ -8,6 +8,7 @@ import type { Department } from '../models';
 // ==================== FIREBASE COLLECTIONS ====================
 export const COLLECTIONS = {
   POINT_REQUESTS: 'pointRequests',
+  MEMBERS: 'members',
   ADMINS: 'admins',
   SECRETARIES: 'secretaries',
   DEPARTMENT_TASKS: 'departmentTasks',
@@ -15,7 +16,7 @@ export const COLLECTIONS = {
 } as const;
 
 // ==================== DEPARTMENTS ====================
-export const DEPARTMENTS: Department[] = ['HR', 'PR', 'IT', 'FR', 'GENERAL'];
+export { DEPARTMENTS, REQUEST_DEPARTMENTS } from './departments.ts';
 
 export const DEPARTMENT_NAMES: Record<Department, string> = {
   HR: 'Human Resources',
@@ -30,10 +31,10 @@ export const VALIDATION = {
   EMAIL_DOMAIN: '@bestis.ro',
   MIN_POINTS: 1,
   MAX_POINTS: 1000,
+  MAX_REPETITIONS: 100,
   MIN_TASK_LENGTH: 3,
   MAX_TASK_LENGTH: 200,
   TRANSFER_EXPIRY_HOURS: 24,
-  TOKEN_LENGTH: 30,
 } as const;
 
 // ==================== PAGINATION ====================

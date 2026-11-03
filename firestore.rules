@@ -1,92 +1,248 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Point requests - users can create, admins can read/update
+    // Policy values; src/constants/rulesParity.test.ts keeps them equal to the app constants.
+    function requestDepartments() { return ['FR', 'PR', 'HR', 'IT']; }
+    function allDepartments() { return requestDepartments().concat(['GENERAL']); }
+    function maxPoints() { return 1000; }
+    function maxRepetitions() { return 100; }
+    function transferTtl() { return duration.value(24, 'h'); }
+    // Requests belong to the academic year that starts on 1 September (UTC).
+    function academicYearStart() {
+      return string(request.time.year() - (request.time.month() < 9 ? 1 : 0)) + '-09-01';
+    }
+    function bestEmail(email) { return email is string && email.matches('[a-z0-9._%+-]+@bestis[.]ro'); }
+
+    // A person is identified everywhere by their lowercased, verified @bestis.ro email.
+    function me() { return request.auth.token.email.lower(); }
+
+    function member() {
+      return request.auth != null && request.auth.token.email is string
+        && request.auth.token.email_verified == true && bestEmail(me());
+    }
+
+    function validCount(value) { return value is int && value > 0; }
+
+    function validDate(value) {
+      return value is string && (
+        value.matches('[1-9][0-9]{3}-((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01])|(0[469]|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8]))')
+        || value.matches('([1-9][0-9](0[48]|[2468][048]|[13579][26])|([2468][048]|[13579][26])00)-02-29')
+      );
+    }
+
+    function optionalText(data, key, max) {
+      return !(key in data) || (data[key] is string && data[key].trim().size() > 0 && data[key].size() <= max);
+    }
+
+    function validTaskReference(data) {
+      let path = /databases/$(database)/documents/departmentTasks/$(data.taskId);
+      return data.taskId is string && data.taskId.matches('[^/]+') && exists(path)
+        && get(path).data.department == data.department;
+    }
+
+    function validTask(data) {
+      return data.keys().hasOnly(['department', 'description', 'points'])
+        && data.description is string && data.description.trim().size() >= 3 && data.description.size() <= 200
+        && validCount(data.points) && data.points <= maxPoints()
+        && data.department in requestDepartments();
+    }
+
+    function validDepartments(departments) {
+      return departments is list && departments.size() > 0 && departments.toSet().hasOnly(allDepartments());
+    }
+
+    function roleDepartments(collection) {
+      let path = /databases/$(database)/documents/$(collection)/$(me());
+      return exists(path) && validDepartments(get(path).data.get('departments', []))
+        ? get(path).data.departments : [];
+    }
+
+    function covers(departments, department) {
+      return 'GENERAL' in departments || department in departments;
+    }
+
+    function adminFor(department) {
+      return member() && covers(roleDepartments('admins'), department);
+    }
+
+    function reviewerFor(department) {
+      let admins = roleDepartments('admins');
+      return member() && (covers(admins, department)
+        || (admins.size() == 0 && covers(roleDepartments('secretaries'), department)));
+    }
+
+    function manages(departments) {
+      let assigned = roleDepartments('admins');
+      return member() && assigned.size() > 0
+        && ('GENERAL' in assigned || departments.hasOnly(assigned.toSet()));
+    }
+
+    // Role documents hold only their departments; the document id is the person's email.
+    function roleDocument(data, email) {
+      return bestEmail(email) && validDepartments(data.departments)
+        && data.keys().hasOnly(['departments', 'acceptedTransferId']);
+    }
+
+    function managedRoleUpdate() {
+      let before = resource.data.departments.toSet();
+      let after = request.resource.data.departments.toSet();
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['departments'])
+        && manages(before.difference(after).union(after.difference(before)));
+    }
+
+    match /members/{email} {
+      allow read: if member();
+      allow create, update: if member() && email == me()
+        && request.resource.data.keys().hasOnly(['name'])
+        && request.resource.data.name is string
+        && request.resource.data.name.trim().size() > 0 && request.resource.data.name.size() <= 100;
+    }
+
+    // Requests reference tasks by id; scores are calculated from the current catalog.
     match /pointRequests/{requestId} {
-      allow create: if request.auth != null 
-        && request.auth.token.email.matches('.*@bestis.ro$')
-        && request.resource.data.keys().hasAll(['userId', 'userEmail', 'userName', 'department', 'task', 'status', 'createdAt']);
-      
-      allow read: if request.auth != null
-        && request.auth.token.email.matches('.*@bestis.ro$');
-      
-      // Admins and secretaries can update (approve/reject)
-      allow update: if request.auth != null 
-        && (exists(/databases/$(database)/documents/admins/$(request.auth.token.email))
-           || exists(/databases/$(database)/documents/secretaries/$(request.auth.token.email)));
+      allow create: if member()
+        && request.resource.data.keys().hasAll(['userEmail', 'department', 'taskId', 'taskNumber', 'eventDate', 'status', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['userEmail', 'department', 'taskId', 'taskNumber', 'eventDate', 'proofUrl', 'details', 'status', 'createdAt'])
+        && request.resource.data.userEmail == me()
+        && request.resource.data.department in requestDepartments()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && validCount(request.resource.data.taskNumber)
+        && request.resource.data.taskNumber <= maxRepetitions()
+        && validDate(request.resource.data.eventDate)
+        && request.resource.data.eventDate >= academicYearStart()
+        && optionalText(request.resource.data, 'proofUrl', 2000)
+        && (!('proofUrl' in request.resource.data) || request.resource.data.proofUrl.matches('https?://[^ ]+'))
+        && optionalText(request.resource.data, 'details', 2000)
+        && validTaskReference(request.resource.data);
+
+      // Approved requests feed the public leaderboard; everything else stays with the owner and reviewers.
+      allow read: if member() && (resource.data.status == 'approved'
+        || resource.data.userEmail == me()
+        || reviewerFor(resource.data.department));
+
+      allow update: if member() && resource.data.status == 'pending'
+        && (
+          (resource.data.userEmail == me()
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.cancelledAt == request.time
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancelledAt']))
+          || (
+            reviewerFor(resource.data.department)
+            && resource.data.eventDate >= academicYearStart()
+            && resource.data.userEmail != me()
+            && request.resource.data.reviewedBy == me()
+            && request.resource.data.reviewedAt == request.time
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'reviewedBy', 'reviewedAt', 'adminComment'
+            ])
+            && optionalText(request.resource.data, 'adminComment', 1000)
+            && (
+              (request.resource.data.status == 'approved' && validTaskReference(resource.data))
+              || (request.resource.data.status == 'rejected' && 'adminComment' in request.resource.data)
+            )
+          )
+        );
     }
-    
-    // Admin documents - allow authenticated @bestis.ro users to read and write their own
+
+    function acceptingTransfer(id) {
+      let before = get(/databases/$(database)/documents/adminTransfers/$(id)).data;
+      let after = getAfter(/databases/$(database)/documents/adminTransfers/$(id)).data;
+      return before.status == 'pending' && before.toEmail == me()
+        && request.time < before.createdAt + transferTtl()
+        && after.status == 'accepted'
+        && after.diff(before).affectedKeys().hasOnly(['status']);
+    }
+
+    function receivingFrom(email) {
+      let recipient = getAfter(/databases/$(database)/documents/admins/$(me())).data;
+      let id = recipient.get('acceptedTransferId', null);
+      return id is string && acceptingTransfer(id)
+        && get(/databases/$(database)/documents/adminTransfers/$(id)).data.fromEmail == email;
+    }
+
+    function transferredRoles(data, id) {
+      let sender = get(/databases/$(database)/documents/admins/$(data.fromEmail)).data;
+      let recipientPath = /databases/$(database)/documents/admins/$(data.toEmail);
+      let previous = exists(recipientPath) ? get(recipientPath).data.departments : [];
+      let recipient = getAfter(recipientPath).data;
+      let remaining = sender.departments.removeAll([data.department]);
+      return data.fromEmail != data.toEmail && data.department in sender.departments
+        && (!('GENERAL' in sender.departments) || data.department == 'GENERAL')
+        && recipient.get('acceptedTransferId', null) == id
+        && recipient.departments.toSet() == previous.toSet().union([data.department].toSet())
+        && (remaining.size() == 0
+          ? !existsAfter(/databases/$(database)/documents/admins/$(data.fromEmail))
+          : getAfter(/databases/$(database)/documents/admins/$(data.fromEmail)).data.departments == remaining);
+    }
+
     match /admins/{adminEmail} {
-      allow read: if request.auth != null 
-        && request.auth.token.email.matches('.*@bestis.ro$');
-      
-      // Allow any @bestis.ro user to create admin document (for initial setup)
-      // In production, you may want to restrict this more
-      allow create: if request.auth != null 
-        && request.auth.token.email.matches('.*@bestis.ro$')
-        && request.resource.data.email.matches('.*@bestis.ro$');
-      
-      // Only existing admins or the admin themselves can update
-      allow update: if request.auth != null 
-        && (request.auth.token.email == adminEmail 
-           || exists(/databases/$(database)/documents/admins/$(request.auth.token.email)));
-      
-      // Only existing admins can delete
-      allow delete: if request.auth != null 
-        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+      allow read: if member();
+
+      allow create: if member() && roleDocument(request.resource.data, adminEmail)
+        && ((manages(request.resource.data.departments.toSet()) && !('acceptedTransferId' in request.resource.data))
+          || (adminEmail == me()
+            && request.resource.data.get('acceptedTransferId', null) is string
+            && acceptingTransfer(request.resource.data.acceptedTransferId)));
+
+      allow update: if member() && roleDocument(request.resource.data, adminEmail)
+        && (managedRoleUpdate()
+          || (adminEmail == me()
+            && request.resource.data.get('acceptedTransferId', null) is string
+            && acceptingTransfer(request.resource.data.acceptedTransferId)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['departments', 'acceptedTransferId']))
+          || (receivingFrom(adminEmail)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['departments'])));
+
+      allow delete: if member() && (manages(resource.data.departments.toSet()) || receivingFrom(adminEmail));
     }
-    
-    // Secretary documents - similar to admins but limited permissions
+
     match /secretaries/{secretaryEmail} {
-      allow read: if request.auth != null 
-        && request.auth.token.email.matches('.*@bestis.ro$');
-      
-      // Only admins can create secretaries
-      allow create: if request.auth != null 
-        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email))
-        && request.resource.data.email.matches('.*@bestis.ro$');
-      
-      // Only admins or the secretary themselves can update
-      allow update: if request.auth != null 
-        && (request.auth.token.email == secretaryEmail 
-           || exists(/databases/$(database)/documents/admins/$(request.auth.token.email)));
-      
-      // Only admins can delete
-      allow delete: if request.auth != null 
-        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+      allow read: if member();
+
+      allow create: if member() && roleDocument(request.resource.data, secretaryEmail)
+        && !('acceptedTransferId' in request.resource.data)
+        && manages(request.resource.data.departments.toSet());
+
+      allow update: if member() && roleDocument(request.resource.data, secretaryEmail) && managedRoleUpdate();
+
+      allow delete: if member() && manages(resource.data.departments.toSet());
     }
-    
-    // Admin transfers
+
+    // A transfer expires transferTtl() after its server creation time; expiry is never stored.
     match /adminTransfers/{transferId} {
-      allow create: if request.auth != null 
-        && request.auth.token.email.matches('.*@bestis.ro$')
-        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
-      
-      allow read, update: if request.auth != null 
-        && (resource.data.fromEmail == request.auth.token.email 
-           || resource.data.toEmail == request.auth.token.email);
+      allow create: if member()
+        && request.resource.data.keys().hasOnly(['fromEmail', 'toEmail', 'department', 'token', 'status', 'createdAt'])
+        && request.resource.data.keys().hasAll(['fromEmail', 'toEmail', 'department', 'token', 'status', 'createdAt'])
+        && request.resource.data.fromEmail == me()
+        && bestEmail(request.resource.data.toEmail)
+        && request.resource.data.toEmail != me()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.token is string && request.resource.data.token.size() >= 16
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.department in roleDepartments('admins')
+        && (!('GENERAL' in roleDepartments('admins')) || request.resource.data.department == 'GENERAL');
+
+      allow read: if member()
+        && (resource.data.fromEmail == me() || resource.data.toEmail == me());
+
+      allow update: if member() && resource.data.status == 'pending'
+        && resource.data.toEmail == me()
+        && request.time < resource.data.createdAt + transferTtl()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && (
+          (request.resource.data.status == 'accepted' && transferredRoles(resource.data, transferId))
+          || request.resource.data.status == 'rejected'
+        );
     }
-    
-    // Tasks collection - read-only for all authenticated users
-    match /tasks/{taskId} {
-      allow read: if request.auth != null 
-        && request.auth.token.email.matches('.*@bestis.ro$');
-      
-      // Only admins can create/update/delete tasks
-      allow write: if request.auth != null 
-        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
-    }
-    
-    // Department tasks - read-only for all authenticated users
+
     match /departmentTasks/{taskId} {
-      allow read: if request.auth != null 
-        && request.auth.token.email.matches('.*@bestis.ro$');
-      
-      // Only admins can create/update/delete department tasks
-      allow write: if request.auth != null 
-        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+      allow read: if member();
+      allow create: if adminFor(request.resource.data.department) && validTask(request.resource.data);
+      allow update: if adminFor(resource.data.department)
+        && validTask(request.resource.data)
+        && request.resource.data.department == resource.data.department;
+      allow delete: if adminFor(resource.data.department);
     }
   }
 }

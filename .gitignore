@@ -28,3 +28,12 @@ public/.htaccess
 *.njsproj
 *.sln
 *.sw?
+
+# Test output
+test-results
+playwright-report
+
+# Firestore backups (personal data) and service-account keys
+backups/
+*firebase-adminsdk*.json
+service-account*.json

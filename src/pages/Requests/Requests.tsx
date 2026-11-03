@@ -1,397 +1,133 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  updateDoc,
-  orderBy,
-  limit,
-  startAfter,
-  QueryDocumentSnapshot
-} from 'firebase/firestore';
-import type { DocumentData } from 'firebase/firestore';
-import { auth, db } from '../../firebase/config';
-import RequestModal from '../../components/RequestModal';
-import './Requests.css';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useUserRequests } from '../../hooks/useRequests';
+import { useTaskCatalog } from '../../hooks/useTasks';
+import { resolveRequestTask } from '../../utils/scoring';
+import type { RequestStatus } from '../../models';
+import RequestCard from './RequestCard';
+import ui from '../../styles/ui.module.css';
+import styles from './Requests.module.css';
 
-interface PointRequest {
-  id: string;
-  userId: string;
-  userEmail: string;
-  userName: string;
-  department: string;
-  task: string;
-  eventDate?: string;
-  proofUrl?: string;
-  taskNumber: string | null;
-  details: string | null;
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
-  createdAt: any;
-  reviewedBy?: string;
-  reviewedAt?: any;
-  adminComment?: string;
-}
+const RequestModal = lazy(() => import('../../components/RequestModal'));
+const statusLabels: Record<RequestStatus, string> = {
+  pending: 'În așteptare',
+  approved: 'Aprobate',
+  rejected: 'Respinse',
+  cancelled: 'Anulate',
+};
 
-function Requests() {
-  const [user] = useAuthState(auth);
-  const [requests, setRequests] = useState<PointRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+export default function Requests() {
+  const { user } = useAuth();
+  const {
+    requests, loading, loadingMore, hasMore, error, cancellingId,
+    fetchInitialRequests, fetchMoreRequests, cancel,
+  } = useUserRequests(user?.email ?? '');
+  const { tasks, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useTaskCatalog(Boolean(user));
+  const [filterStatus, setFilterStatus] = useState<RequestStatus | 'all'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  
   const observerTarget = useRef<HTMLDivElement>(null);
-  const ITEMS_PER_PAGE = 15;
 
   useEffect(() => {
-    if (user) {
-      fetchInitialRequests();
-    }
-  }, [user]);
+    const target = observerTarget.current;
+    if (!target || loading || loadingMore || !hasMore || error) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0]?.isIntersecting) void fetchMoreRequests();
+    }, { threshold: 0.1 });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loading, loadingMore, hasMore, error, fetchMoreRequests]);
 
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
-          fetchMoreRequests();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [hasMore, loadingMore, loading, lastDoc, filterStatus]);
-
-  const fetchInitialRequests = async () => {
-    if (!user?.uid) return;
-
-    setLoading(true);
-    try {
-      const q = query(
-        collection(db, 'pointRequests'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        limit(ITEMS_PER_PAGE)
-      );
-
-      const querySnapshot = await getDocs(q);
-      const fetchedRequests: PointRequest[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        fetchedRequests.push({ id: doc.id, ...doc.data() } as PointRequest);
-      });
-
-      setRequests(fetchedRequests);
-      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
-      setHasMore(querySnapshot.docs.length === ITEMS_PER_PAGE);
-      
-      console.log('✅ Fetched initial requests:', fetchedRequests.length);
-    } catch (error) {
-      console.error('Error fetching requests:', error);
-    } finally {
-      setLoading(false);
-    }
+  const counts = { all: requests.length, pending: 0, approved: 0, rejected: 0, cancelled: 0 };
+  for (const request of requests) counts[request.status]++;
+  const totalLabel = hasMore ? 'Cereri încărcate' : 'Total Cereri';
+  const filtered = filterStatus === 'all' ? requests : requests.filter(request => request.status === filterStatus);
+  const cancelRequest = (requestId: string) => {
+    if (window.confirm('Ești sigur că vrei să anulezi această cerere?')) void cancel(requestId);
   };
-
-  const fetchMoreRequests = useCallback(async () => {
-    if (!user?.uid || !lastDoc || !hasMore || loadingMore) return;
-
-    setLoadingMore(true);
-    try {
-      const q = query(
-        collection(db, 'pointRequests'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        startAfter(lastDoc),
-        limit(ITEMS_PER_PAGE)
-      );
-
-      const querySnapshot = await getDocs(q);
-      const fetchedRequests: PointRequest[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        fetchedRequests.push({ id: doc.id, ...doc.data() } as PointRequest);
-      });
-
-      setRequests(prev => [...prev, ...fetchedRequests]);
-      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
-      setHasMore(querySnapshot.docs.length === ITEMS_PER_PAGE);
-      
-      console.log('✅ Loaded more requests:', fetchedRequests.length);
-    } catch (error) {
-      console.error('Error loading more requests:', error);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [user, lastDoc, hasMore, loadingMore]);
-
-  const fetchRequests = async () => {
-    // Reset and fetch from beginning
-    setLastDoc(null);
-    setHasMore(true);
-    await fetchInitialRequests();
-  };
-
-  const filteredRequests = filterStatus === 'all' 
-    ? requests 
-    : requests.filter(req => req.status === filterStatus);
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <span className="status-badge status-pending">⏳ În așteptare</span>;
-      case 'approved':
-        return <span className="status-badge status-approved">✅ Aprobat</span>;
-      case 'rejected':
-        return <span className="status-badge status-rejected">❌ Respins</span>;
-      case 'cancelled':
-        return <span className="status-badge status-cancelled">🚫 Anulat</span>;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusCount = (status: string) => {
-    return requests.filter(req => req.status === status).length;
-  };
-
-  const handleCancelRequest = async (requestId: string) => {
-    if (!confirm('Ești sigur că vrei să anulezi această cerere?')) {
-      return;
-    }
-
-    try {
-      await updateDoc(doc(db, 'pointRequests', requestId), {
-        status: 'cancelled',
-        cancelledAt: new Date(),
-        cancelledBy: user?.email
-      });
-
-      fetchRequests();
-    } catch (error) {
-      console.error('Error cancelling request:', error);
-      alert('Eroare la anularea cererii. Te rog încearcă din nou.');
-    }
-  };
-
-  const handleModalSuccess = () => {
-    // Refresh the requests list after successful submission
-    fetchRequests();
-  };
-
-  if (loading) {
-    return (
-      <div className="requests-page">
-        <div className="requests-container">
-          <p className="loading-text">Se încarcă...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="requests-page">
-      <div className="requests-container">
-        <div className="requests-content">
-          <h1>📋 Cererile Mele</h1>
-
-          <button 
-            className="add-request-btn"
-            onClick={() => setIsModalOpen(true)}
-          >
-            ➕ Adaugă Cerere Nouă
-          </button>
-          <p className="requests-subtitle">
-            Istoricul tuturor cererilor tale de puncte
-          </p>
-
-          <div className="stats-cards">
-            <div className="stat-card">
-              <div className="stat-number">{requests.length}</div>
-              <div className="stat-label">Total Cereri</div>
-            </div>
-            <div className="stat-card stat-pending">
-              <div className="stat-number">{getStatusCount('pending')}</div>
-              <div className="stat-label">În așteptare</div>
-            </div>
-            <div className="stat-card stat-approved">
-              <div className="stat-number">{getStatusCount('approved')}</div>
-              <div className="stat-label">Aprobate</div>
-            </div>
-            <div className="stat-card stat-rejected">
-              <div className="stat-number">{getStatusCount('rejected')}</div>
-              <div className="stat-label">Respinse</div>
-            </div>
-          </div>
-
-          <div className="filter-section">
-            <label>Filtrează după status:</label>
-            <select 
-              value={filterStatus} 
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">Toate ({requests.length})</option>
-              <option value="pending">În așteptare ({getStatusCount('pending')})</option>
-              <option value="approved">Aprobate ({getStatusCount('approved')})</option>
-              <option value="rejected">Respinse ({getStatusCount('rejected')})</option>
-              <option value="cancelled">Anulate ({getStatusCount('cancelled')})</option>
-            </select>
-          </div>  
-
-
-          <div className="requests-list">
-            {filteredRequests.length === 0 ? (
-              <div className="no-requests">
-                <p>📭 Nu ai cereri {filterStatus !== 'all' ? `cu statusul "${filterStatus}"` : ''}</p>
+    <main className={`${ui.page} ${styles['requests-page']}`}>
+      <div className={styles['requests-container']}>
+        {loading || catalogLoading ? <p className={styles['loading-text']} role="status">Se încarcă...</p> : (
+          <div className={styles['requests-content']}>
+            <h1><span aria-hidden="true">📋 </span>Cererile Mele</h1>
+            <button type="button" className={`${ui.button} ${styles['add-request-btn']}`} onClick={() => setIsModalOpen(true)}><span aria-hidden="true">➕</span> Adaugă Cerere Nouă</button>
+            <p className={styles['requests-subtitle']}>Istoricul tuturor cererilor tale de puncte</p>
+            {error && (
+              <div role="alert" className={ui.notice}>
+                <p>{error}</p>
+                <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={() => void fetchInitialRequests()}>Reîncearcă</button>
               </div>
-            ) : (
-              filteredRequests.map(request => {
-                const isExpanded = expandedCard === request.id;
-                return (
-                  <div 
-                    key={request.id} 
-                    className={`request-card status-${request.status} ${isExpanded ? 'expanded' : ''}`}
-                    onClick={() => setExpandedCard(isExpanded ? null : request.id)}
-                  >
-                    <div className="request-header">
-                      <span className="request-dept">{request.department}</span>
-                      <div className="request-header-right">
-                        {getStatusBadge(request.status)}
-                        <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="request-body">
-                      <p className="request-task">
-                        {request.task}
-                      </p>
-                      {!isExpanded && (
-                        <>
-                          {request.taskNumber && (
-                            <p className="request-number">
-                              {request.taskNumber}x
-                            </p>
-                          )}
-                          {request.eventDate && (
-                            <p className="request-event-date">
-                              📅 {new Date(request.eventDate).toLocaleDateString('ro-RO')}
-                            </p>
-                          )}
-                          {request.adminComment && request.status !== 'pending' && (
-                            <div className={`admin-comment-preview ${request.status}`}>
-                              {request.status === 'approved' ? '✅' : '❌'} {request.adminComment.substring(0, 60)}{request.adminComment.length > 60 ? '...' : ''}
-                            </div>
-                          )}
-                        </>
-                      )}
-                      
-                      {isExpanded && (
-                        <>
-                          {request.taskNumber && (
-                            <p className="request-number">
-                              <strong>Repetări:</strong> {request.taskNumber}
-                            </p>
-                          )}
-                          {request.eventDate && (
-                            <p className="request-event-date">
-                              <strong>Data Eveniment:</strong> {new Date(request.eventDate).toLocaleDateString('ro-RO')}
-                            </p>
-                          )}
-                          {request.proofUrl && (
-                            <div className="request-proof">
-                              <strong>Dovadă:</strong>
-                              <a 
-                                href={request.proofUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="proof-link"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                📎 Vezi Dovada
-                              </a>
-                            </div>
-                          )}
-                          {request.details && (
-                            <p className="request-details-full">
-                              <strong>Detalii:</strong> {request.details}
-                            </p>
-                          )}
-                          <p className="request-date">
-                            <strong>Data cererii:</strong> {request.createdAt?.toDate().toLocaleString('ro-RO')}
-                          </p>
-                          {request.reviewedBy && (
-                            <p className="request-reviewed">
-                              <strong>Revizuit de:</strong> {request.reviewedBy}
-                              {request.reviewedAt && ` • ${request.reviewedAt?.toDate().toLocaleString('ro-RO')}`}
-                            </p>
-                          )}
-                          {request.adminComment && (
-                            <div className={`admin-comment ${request.status}`}>
-                              <strong>
-                                {request.status === 'approved' ? '✅ Mesaj Admin:' : 
-                                 request.status === 'rejected' ? '❌ Motiv Respingere:' : 
-                                 '💬 Comentariu Admin:'}
-                              </strong>
-                              <p>{request.adminComment}</p>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                    
-                    {request.status === 'pending' && isExpanded && (
-                      <div className="request-actions" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          className="cancel-request-btn"
-                          onClick={() => handleCancelRequest(request.id)}
-                        >
-                          🚫 Anulează Cererea
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
             )}
-          </div>
-
-          {/* Infinite scroll trigger */}
-          {hasMore && !loading && (
-            <div ref={observerTarget} className="loading-trigger">
-              {loadingMore && <p className="loading-more-text">⏳ Se încarcă mai multe...</p>}
+            {catalogError && (
+              <div role="alert" className={ui.notice}>
+                <p>{catalogError}</p>
+                <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={retryCatalog}>Reîncearcă încărcarea task-urilor</button>
+              </div>
+            )}
+            <div className={styles['stats-cards']}>
+              {(['all', 'pending', 'approved', 'rejected'] as const).map(status => (
+                <div key={status} className={`${styles['stat-card']} ${status === 'all' ? '' : styles[`status-${status}`]}`}>
+                  <div className={styles['stat-number']}>{counts[status]}</div>
+                  <div className={styles['stat-label']}>{status === 'all' ? totalLabel : statusLabels[status]}</div>
+                </div>
+              ))}
             </div>
-          )}
-
-          {!hasMore && requests.length > 0 && (
-            <p className="end-of-list">✅ Toate cererile au fost încărcate</p>
-          )}
-        </div>
+            {hasMore && (
+              <p className={styles['requests-subtitle']}>
+                Statisticile și filtrele se aplică cererilor încărcate. Încarcă toate cererile pentru istoricul complet.
+              </p>
+            )}
+            <div className={styles['filter-section']}>
+              <label htmlFor="request-status">Filtrează după status:</label>
+              <select
+                id="request-status"
+                value={filterStatus}
+                onChange={event => {
+                  const value = event.target.value;
+                  if (value === 'all' || value === 'pending' || value === 'approved' || value === 'rejected' || value === 'cancelled') {
+                    setFilterStatus(value);
+                  }
+                }}
+                className={`${ui.field} ${styles['filter-select']}`}
+              >
+                <option value="all">Toate ({counts.all})</option>
+                {(['pending', 'approved', 'rejected', 'cancelled'] as const).map(status => (
+                  <option key={status} value={status}>{statusLabels[status]} ({counts[status]})</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles['requests-list']}>
+              {filtered.length === 0 ? (
+                !error && <p className={styles['no-requests']}><span aria-hidden="true">📭 </span>Nu ai cereri {filterStatus === 'all' ? '' : `cu statusul "${filterStatus}"`}</p>
+              ) : !catalogError && filtered.map(request => (
+                <RequestCard
+                  key={request.id}
+                  request={request}
+                  task={resolveRequestTask(request, tasks)}
+                  expanded={expandedCard === request.id}
+                  cancelling={cancellingId !== null}
+                  onToggle={() => setExpandedCard(expandedCard === request.id ? null : request.id)}
+                  onCancel={cancelRequest}
+                />
+              ))}
+            </div>
+            {hasMore && (
+              <div ref={observerTarget} className={styles['loading-trigger']}>
+                {loadingMore && <p className={styles['loading-more-text']} role="status">Se încarcă mai multe...</p>}
+                <button type="button" className={`${ui.button} ${ui.secondary}`} disabled={loadingMore || Boolean(error)} onClick={() => void fetchMoreRequests()}>Încarcă mai multe</button>
+              </div>
+            )}
+            {!hasMore && requests.length > 0 && <p className={styles['end-of-list']}>Toate cererile au fost încărcate</p>}
+          </div>
+        )}
       </div>
-
-      <RequestModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={handleModalSuccess}
-      />
-    </div>
+      {isModalOpen && (
+        <Suspense fallback={<p role="status">Se încarcă formularul...</p>}>
+          <RequestModal isOpen onClose={() => setIsModalOpen(false)} onSuccess={() => void fetchInitialRequests()} />
+        </Suspense>
+      )}
+    </main>
   );
 }
-
-export default Requests;
