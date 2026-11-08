@@ -5,24 +5,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "department",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "reviewedAt",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "pointRequests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
           "fieldPath": "userEmail",
           "order": "ASCENDING"
         },

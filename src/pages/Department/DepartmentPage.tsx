@@ -8,10 +8,9 @@ import type { LeaderboardDepartment } from '../../constants/departments';
 import type { LeaderboardSort, TaskSort } from './sorting';
 import ui from '../../styles/ui.module.css';
 import styles from './DepartmentPage.module.css';
-import { formatDateTime } from '../../utils';
 
 export default function DepartmentPage({ department }: { department: LeaderboardDepartment }) {
-  const { leaderboard, tasks, reset, loading, error, issues, excludedRequests, fetchLeaderboard } = useLeaderboard(department);
+  const { leaderboard, tasks, loading, error, issues, excludedRequests, fetchLeaderboard } = useLeaderboard(department);
   const [activeTab, setActiveTab] = useState<'activity' | 'tasks'>('activity');
   const [leaderboardSort, setLeaderboardSort] = useState<LeaderboardSort>({ key: 'points', direction: 'desc' });
   const [taskSort, setTaskSort] = useState<TaskSort>({ key: 'description', direction: 'asc' });
@@ -40,7 +39,6 @@ export default function DepartmentPage({ department }: { department: Leaderboard
       ) : (
         <>
           <LeaderboardNotices error={error} issues={issues} excludedRequests={excludedRequests} retry={fetchLeaderboard} />
-          {reset && <div className={ui.notices}><p className={ui.notice}>Punctajele includ aprobările de la {formatDateTime(reset.resetAt.toDate())}.</p></div>}
           <div className={styles.tabs} aria-label="Conținut departament">
             <button type="button" className={`${ui.button} ${activeTab === 'activity' ? styles.activeTab : ''}`}
               aria-pressed={activeTab === 'activity'} onClick={() => setActiveTab('activity')}>

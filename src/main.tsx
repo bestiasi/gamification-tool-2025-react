@@ -1,10 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import AppRoutes from './AppRoutes';
-import './styles/app-shell.css';
-import './index.css';
 
 // After a deploy, an open tab may ask for code files that no longer exist; reload once to get the new version.
 window.addEventListener('vite:preloadError', () => {

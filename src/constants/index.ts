@@ -13,7 +13,6 @@ export const COLLECTIONS = {
   SECRETARIES: 'secretaries',
   DEPARTMENT_TASKS: 'departmentTasks',
   ADMIN_TRANSFERS: 'adminTransfers',
-  SCORING_SETTINGS: 'scoringSettings',
 } as const;
 
 // ==================== DEPARTMENTS ====================

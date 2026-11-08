@@ -18,6 +18,7 @@ import './pages/Admin/Admin.css';
 import './pages/AdminTransfer/AdminTransfer.css';
 import './pages/AdminSetup/AdminSetup.css';
 import './pages/AcceptTransfer/AcceptTransfer.css';
+import './App.css';
 
 const Login = lazy(() => import('./pages/Login/Login'));
 const Welcome = lazy(() => import('./pages/Welcome/Welcome'));

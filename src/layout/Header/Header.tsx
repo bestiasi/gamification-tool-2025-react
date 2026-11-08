@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({
 logo = "/icons/logo best.png",
   links = [
     ...departmentPages.map(({ department, path }) => ({ text: department, url: path })),
-    { text: 'REQUESTS', url: '/requests' },
+    { text: 'MY REQUESTS', url: '/my-requests' },
     { text: 'ADMIN', url: '/admin' }
   ] 
 }) => {
