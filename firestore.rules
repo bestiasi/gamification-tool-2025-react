@@ -98,6 +98,15 @@ service cloud.firestore {
         && request.resource.data.name.trim().size() > 0 && request.resource.data.name.size() <= 100;
     }
 
+    match /scoringSettings/global {
+      allow read: if member();
+      allow create, update: if member() && 'IT' in roleDepartments('admins')
+        && request.resource.data.keys().hasAll(['resetAt', 'resetBy'])
+        && request.resource.data.keys().hasOnly(['resetAt', 'resetBy'])
+        && request.resource.data.resetAt == request.time
+        && request.resource.data.resetBy == me();
+    }
+
     // Requests reference tasks by id; scores are calculated from the current catalog.
     match /pointRequests/{requestId} {
       allow create: if member()

@@ -1,6 +1,9 @@
 # BEST Iasi Gamification Tool 2025-2026 (intern tool)
 This is the repository for the BEST Iasi Gamification Tool 2025, a web application built using React and Vite.
 
+New IT owner: follow the [single-session code walkthrough](./BACKEND-HANDOVER.md)
+from startup and login through requests, moderation, transfers and score reset.
+
 ## Prerequisites
 
 - Node.js 22.18+ or 24 LTS (Node.js 23 is end-of-life)
@@ -42,6 +45,7 @@ Do not copy a page to add a department or duplicate a Firestore query in JSX.
 | Leaderboard rows and task catalog | [LeaderboardTable.tsx](./src/pages/Department/LeaderboardTable.tsx), [AvailableTasksTable.tsx](./src/pages/Department/AvailableTasksTable.tsx) |
 | Table ordering and shared clickable headers | [sorting.ts](./src/pages/Department/sorting.ts), [SortableHeader.tsx](./src/pages/Department/SortableHeader.tsx) |
 | Shared colors and composable controls | [tokens.css](./src/styles/tokens.css), [ui.module.css](./src/styles/ui.module.css) |
+| Global root, background, and footer layout | [app-shell.css](./src/styles/app-shell.css), imported by [main.tsx](./src/main.tsx) after the route imports to preserve stylesheet order |
 | Department styling and decoration | [DepartmentPage.module.css](./src/pages/Department/DepartmentPage.module.css), [DepartmentDecorations.tsx](./src/pages/Department/DepartmentDecorations.tsx) |
 | Member history, filters, and pagination UI | [Requests.tsx](./src/pages/Requests/Requests.tsx) |
 | A member's request card and status | [RequestCard.tsx](./src/pages/Requests/RequestCard.tsx), [RequestStatusBadge.tsx](./src/pages/Requests/RequestStatusBadge.tsx) |
@@ -61,6 +65,7 @@ Do not copy a page to add a department or duplicate a Firestore query in JSX.
 | Safe return URLs after login | [navigation.ts](./src/utils/navigation.ts) |
 | Score calculations and approval transactions | [scoring.ts](./src/utils/scoring.ts), [requestReview.ts](./src/services/requestReview.ts) |
 | Live department standings and task catalog | [useLeaderboard.ts](./src/hooks/useLeaderboard.ts), [leaderboardService.ts](./src/services/leaderboardService.ts) |
+| IT-only global ranking reset and approval cutoff | [AdminScoringReset.tsx](./src/components/admin/AdminScoringReset.tsx), [AdminScoringReset.module.css](./src/components/admin/AdminScoringReset.module.css), [useScoringReset.ts](./src/hooks/useScoringReset.ts), [scoringResetService.ts](./src/services/scoringResetService.ts) |
 | Live task names and prices in request history/admin | [useTaskCatalog](./src/hooks/useTasks.ts), [taskCatalog.ts](./src/services/taskCatalog.ts) |
 | Shared data types | [models/index.ts](./src/models/index.ts) |
 
@@ -105,6 +110,10 @@ the feature rather than creating a generic "common" folder or a second MVC frame
   `/admin/setup` grants access only for existing authorized admins. The first
   admin must be provisioned through a privileged Firebase Console/Admin SDK
   operation; members cannot bootstrap themselves.
+- Task editing opens inside the selected card and focuses its description,
+  rather than opening a form above the list. Validation errors stay with the
+  form; save/cancel returns keyboard focus to that task's edit button. New-task
+  creation uses the same form above the list.
 - The request dialog contains focus, closes with Escape when not submitting,
   restores focus to its opener, and locks background scrolling while open.
   Admin request expansion uses native buttons with `aria-expanded` and a visible
@@ -156,10 +165,12 @@ the feature rather than creating a generic "common" folder or a second MVC frame
 - Adding a route or hiding a button never grants or revokes Firebase permissions.
   Rules, role workflows, and new department support require their own tests.
 
-Run `npm run build` for TypeScript and production-bundle checks. Regression
-tests and their tooling are kept in a separate local workspace, not committed
-as application dependencies or npm scripts. **The normal development server still uses live Firebase:
-do not test writes against real accounts/data without explicit authorization.**
+Run `npm run build` for TypeScript and production-bundle checks. The current
+repository includes unit tests (`npm test`), emulator rules tests
+(`npm run test:rules`) and browser tests (`npm run test:e2e`).
+**The normal development server uses live Firebase unless
+`VITE_FIREBASE_EMULATORS=true`: do not test writes against real accounts/data
+without explicit authorization.**
 
 ## Deployment
 
@@ -174,7 +185,7 @@ must be deployed by hand: `npx.cmd firebase deploy --only firestore:rules,firest
 There is no custom backend server or Cloud Functions implementation in this
 repository. React calls Firebase Authentication and Cloud Firestore directly.
 Firestore holds `members`, `pointRequests`, `departmentTasks`, `admins`,
-`secretaries`, and `adminTransfers`. Firebase Storage is initialized, but `storage.rules` denies
+`secretaries`, `adminTransfers`, and `scoringSettings`. Firebase Storage is initialized, but `storage.rules` denies
 all access. Firebase Hosting configuration exists; the active deployment workflow
 uses Hostinger instead.
 
@@ -190,6 +201,7 @@ uses Hostinger instead.
 | Event day | `eventDate` as a `YYYY-MM-DD` string, a calendar day without a time zone |
 | Transfer expiry | Derived: `createdAt` + 24 hours; never stored |
 | Season | Derived: the academic year starting 1 September. Rankings count only approved requests dated in it; older pending requests read as cancelled and the rules refuse new or reviewed ones dated before it |
+| Manual ranking cutoff | `scoringSettings/global`: server `resetAt` and `resetBy`. All four rankings additionally require `reviewedAt >= resetAt`; only an admin explicitly assigned IT can reset |
 | Limits (points, repetitions, departments, domain, transfer lifetime) | `VALIDATION`/`departments.ts` in the app and the matching functions at the top of `firestore.rules`; `src/constants/rulesParity.test.ts` fails if they differ |
 
 ### Resetting the production database
@@ -204,6 +216,12 @@ node scripts/firestore-reset.mjs backup
 node scripts/firestore-reset.mjs wipe --yes-delete-everything
 node scripts/firestore-reset.mjs seed-admin first.admin@bestis.ro
 ```
+
+These are privileged production operations, not onboarding exercises or a score
+reset workflow. `wipe` does not automatically make a backup. Establish an
+approved recovery procedure before destructive maintenance; the script's legacy
+converter is not a lossless restore tool and does not preserve the current
+scoring-settings schema.
 
 `backup` writes `backups/` (git-ignored, it contains personal data). The rules let
 only existing admins appoint admins, so `seed-admin` creates the first GENERAL
@@ -256,12 +274,18 @@ checking in configuration alone does not update those resources.
   excluded from counting. Deleting a task removes all of its contributions.
   Exclusion does not delete requests; the leaderboard reports the excluded count.
   IDs are never inferred from old descriptions, even when a name is unique.
-- Malformed repetitions on requests with valid task IDs are excluded and listed
-  for manual review, not guessed or repaired automatically. Legacy records with
-  no repetition field retain the original default of one; new requests require
-  an explicit positive integer. No historical point estimates are used.
-- Leaderboards intentionally remain all-time totals and are labeled `PUNCTAJ TOTAL`.
-  No season restriction or historical data migration has been applied.
+- Malformed repetitions on requests with valid task IDs contribute no score and
+  are listed for manual review, not guessed or repaired automatically. The current
+  schema requires an explicit positive integer; missing counts are not defaulted
+  to one by the scorer. No historical point estimates are used.
+- Leaderboards count approved requests dated from the current academic year's
+  1 September cutoff. The IT-only reset adds a persistent global approval-time
+  cutoff: all FR/PR/HR/IT rankings count only `reviewedAt >= resetAt`, starting at
+  the server reset instant, not midnight. Older pending submissions can count
+  when approved afterwards, provided their event day remains in the academic year.
+  No requests or tasks are deleted, and historical request score displays are
+  unchanged. GENERAL-only admins and IT secretaries cannot reset; the rules
+  require an explicit IT admin assignment. No score totals are stored.
 - Each mounted department view listens to approved requests and its task catalog.
   New approvals, task-point edits, renames, and deletions update the displayed
   scores and ordering without a refresh. History/admin also listen to the catalog
@@ -275,8 +299,14 @@ Validate this application and its updated rules together in staging before a
 coordinated release. Older frontends that copy task names or award snapshots are
 incompatible with the new write schema. Until the new rules are deployed, an
 updated frontend cannot submit ID-only requests against the earlier rules.
-The Hostinger workflow
-still deploys only the frontend, so rules need an explicit authorized deployment.
+The Hostinger workflow attempts to publish Firestore rules/indexes before the
+frontend. If `FIREBASE_SERVICE_ACCOUNT` is missing it warns and skips that step,
+but can still upload the frontend. Confirm actual rule deployment, not just a
+green job; schema changes also need compatibility with older open browser tabs.
+The reset requires the updated `scoringSettings/global` rules and the
+`pointRequests` department/status/reviewedAt composite index. Confirm that the
+index has finished building before publishing the matching frontend; emulator
+tests do not establish production index readiness.
 The local rules now close role self-creation/escalation, department-unscoped
 writes, empty-role privileges, and self-review. Members can read approved
 requests (the public rankings need them) and their own requests; pending,
@@ -293,18 +323,22 @@ implemented above. These application and delivery issues remain:
 
 - Approved requests, including their proof links, are readable by every member
   because the rankings are computed from them.
-- Rankings still read all approved history and moderation reads every matching
-  status record. Bound these reads without silently truncating rankings or search.
-- Per-department rounds/reset and historical-record repair are not implemented.
-  A reset must preserve history and task prices, start a new round at zero, and
-  define how previously pending requests enter that round.
+- Before any manual reset, rankings fetch all approved department history; after
+  a reset, the query bounds approval time. Both still filter the academic year
+  in the browser; member-name listeners also read the full collection.
+  Moderation reads every matching scoped status record. Bound these reads
+  without silently truncating rankings or search.
+- Per-department rounds, archived season standings and historical-record repair
+  are not implemented. The global approval-cutoff reset does not archive standings.
 - Legacy global styles still need further isolation outside the scoped components.
   Other screens have not received a complete accessibility audit.
 - Initial JavaScript remains above Vite's 500 kB warning threshold after route
   splitting. Smaller entry bundles do not prove lower production Firebase latency.
-- Existing source lint fails; full lint also includes generated Vite cache files.
-  Deployment has no test/lint gate, uses an end-of-life Node version, and relies
-  on separately managed Hostinger rewrite configuration.
+- CI now runs lint/unit/rules/E2E/build checks on Node 24, but a missing Firebase
+  deployment credential does not prevent frontend publication. Verify branch
+  protection, schema compatibility and separately managed Hostinger rewrites.
+- Backups are local private JSON dumps; a scheduled organisation-controlled
+  backup and a tested lossless restore procedure are not defined in this repository.
 
 Fix policy and workflow correctness before considering a backend migration.
 Changing cloud vendors does not fix these application or authorization defects.

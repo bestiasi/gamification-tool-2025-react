@@ -7,9 +7,12 @@ import type { LeaderboardResult, ScorableRequest } from '../utils/scoring.ts';
 import { subscribeToTaskCatalog } from './taskCatalog.ts';
 import { subscribeToMemberNames, type MemberNames } from './memberService.ts';
 import { academicYearStart } from '../utils/requestCalendar.ts';
+import { subscribeToScoringReset } from './scoringResetService.ts';
+import type { ScoringReset } from './scoringResetService.ts';
 
 export interface DepartmentLeaderboard extends LeaderboardResult {
   tasks: DepartmentTask[];
+  reset: ScoringReset | null;
 }
 
 export const subscribeToLeaderboard = (
@@ -23,14 +26,18 @@ export const subscribeToLeaderboard = (
   let requests: ScorableRequest[] | undefined;
   let tasks: DepartmentTask[] | undefined;
   let names: MemberNames | undefined;
+  let reset: ScoringReset | null | undefined;
+  let requestRevision = 0;
   let stopRequests: Unsubscribe | undefined;
   let stopTasks: Unsubscribe | undefined;
   let stopNames: Unsubscribe | undefined;
+  let stopReset: Unsubscribe | undefined;
   const stop = () => {
     active = false;
     stopRequests?.();
     stopTasks?.();
     stopNames?.();
+    stopReset?.();
   };
   const fail = (error: unknown, fromCache = false) => {
     if (!active) return;
@@ -39,18 +46,22 @@ export const subscribeToLeaderboard = (
     onError(error instanceof Error ? error : new Error(String(error)));
   };
   const publish = () => {
-    if (active && requests && tasks && names) {
-      onChange({ ...aggregateApprovedRequests(requests, tasks, names), tasks });
+    if (active && requests && tasks && names && reset !== undefined) {
+      onChange({ ...aggregateApprovedRequests(requests, tasks, names), tasks, reset });
     }
   };
 
-  try {
+  const listenForRequests = (cutoff: ScoringReset | null) => {
+    const revision = ++requestRevision;
+    stopRequests?.();
+    requests = undefined;
     stopRequests = onSnapshot(query(
       collection(database, COLLECTIONS.POINT_REQUESTS),
       where('department', '==', department),
       where('status', '==', 'approved'),
+      ...(cutoff ? [where('reviewedAt', '>=', cutoff.resetAt)] : []),
     ), { includeMetadataChanges: true }, snapshot => {
-      if (!active) return;
+      if (!active || revision !== requestRevision) return;
       requests = undefined;
       try {
         requests = snapshot.docs.filter(document => document.data().eventDate >= since).map(document => {
@@ -65,6 +76,14 @@ export const subscribeToLeaderboard = (
       } catch (error) {
         fail(error, snapshot.metadata.fromCache);
       }
+    }, error => { if (revision === requestRevision) fail(error); });
+  };
+
+  try {
+    stopReset = subscribeToScoringReset(database, nextReset => {
+      if (!active) return;
+      reset = nextReset;
+      try { listenForRequests(nextReset); } catch (error) { fail(error); }
     }, fail);
     stopTasks = subscribeToTaskCatalog(database, catalog => {
       if (!active) return;

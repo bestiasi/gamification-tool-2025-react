@@ -61,7 +61,10 @@ export const useTasks = (department?: Department) => {
   const [error, setError] = useState<string>('');
   const [revision, setRevision] = useState(0);
 
-  const fetchTasks = useCallback(() => setRevision(value => value + 1), []);
+  const fetchTasks = useCallback(() => {
+    setLoading(true);
+    setRevision(value => value + 1);
+  }, []);
 
   useEffect(() => {
     let active = true;
