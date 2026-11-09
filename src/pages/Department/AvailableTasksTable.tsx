@@ -7,9 +7,10 @@ interface Props {
   tasks: DepartmentTask[];
   sort: TaskSort;
   onSort: (key: TaskSort['key']) => void;
+  showDepartment?: boolean;
 }
 
-export default function AvailableTasksTable({ tasks, sort, onSort }: Props) {
+export default function AvailableTasksTable({ tasks, sort, onSort, showDepartment = false }: Props) {
   const rows = sortTasks(tasks, sort);
 
   return (
@@ -26,7 +27,7 @@ export default function AvailableTasksTable({ tasks, sort, onSort }: Props) {
         {rows.length === 0 ? (
           <tr><td colSpan={2} className={styles.empty}>Nu există task-uri disponibile</td></tr>
         ) : rows.map(task => (
-          <tr key={task.id}><td>{task.description}</td><td>{task.points}</td></tr>
+          <tr key={task.id}><td>{showDepartment && `[${task.department}] `}{task.description}</td><td>{task.points}</td></tr>
         ))}
       </tbody>
     </table>

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { useAuth } from '../../contexts/useAuth';
-import { departmentPages } from '../../constants/departments';
+import { leaderboardPages } from '../../constants/departments';
 import './Header.css';
 
 interface HeaderProps {
@@ -14,7 +14,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ 
 logo = "/icons/logo best.png",
   links = [
-    ...departmentPages.map(({ department, path }) => ({ text: department, url: path })),
+    ...leaderboardPages.map(({ department, path }) => ({ text: department, url: path })),
     { text: 'MY REQUESTS', url: '/my-requests' },
     { text: 'ADMIN', url: '/admin' }
   ] 

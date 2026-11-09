@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/useAuth';
 import AdminRequests from '../../components/admin/AdminRequests';
 import AdminTasks from '../../components/admin/AdminTasks';
 import AdminSecretaries from '../../components/admin/AdminSecretaries';
+import ResetScoresButton from '../../components/admin/ResetScoresButton';
 import AdminTransfer from '../AdminTransfer/AdminTransfer';
 import './Admin.css';
 
@@ -23,6 +24,7 @@ export default function Admin() {
           <>
             <h1>Panou {isAdmin ? 'Admin' : 'Secretar'}</h1>
             <p className="admin-subtitle">Rol: <strong>{isAdmin ? 'Administrator' : 'Secretar'}</strong> | Departamente: {departments.join(', ')}</p>
+            <ResetScoresButton />
             <nav className="admin-tabs" aria-label="Secțiuni administrare">
               <button type="button" className={`tab-btn ${tab === 'requests' ? 'active' : ''}`} aria-pressed={tab === 'requests'} onClick={() => setTab('requests')}>REQUESTS</button>
               {isAdmin && <>

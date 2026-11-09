@@ -7,6 +7,11 @@ export const departmentPages = [
   { department: 'IT', path: '/it' },
 ] as const;
 
+export const leaderboardPages = [
+  { department: 'GENERAL', path: '/general' },
+  ...departmentPages,
+] as const;
+
 export type LeaderboardDepartment = typeof departmentPages[number]['department'];
 
 export const REQUEST_DEPARTMENTS: readonly LeaderboardDepartment[] = departmentPages.map(({ department }) => department);

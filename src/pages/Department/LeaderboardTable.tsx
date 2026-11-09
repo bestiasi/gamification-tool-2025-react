@@ -1,4 +1,4 @@
-import type { UserPoints } from '../../models';
+import type { Department, UserPoints } from '../../models';
 import { sortLeaderboard, type LeaderboardSort } from './sorting';
 import SortableHeader from './SortableHeader';
 import styles from './DepartmentPage.module.css';
@@ -7,9 +7,10 @@ interface Props {
   people: UserPoints[];
   sort: LeaderboardSort;
   onSort: (key: LeaderboardSort['key']) => void;
+  taskDepartments?: ReadonlyMap<string, Department>;
 }
 
-export default function LeaderboardTable({ people, sort, onSort }: Props) {
+export default function LeaderboardTable({ people, sort, onSort, taskDepartments }: Props) {
   const columns = [
     { key: 'name', label: 'BESTAN', className: styles.nameCell },
     { key: 'points', label: 'PUNCTAJ TOTAL', className: styles.scoreCell },
@@ -37,7 +38,7 @@ export default function LeaderboardTable({ people, sort, onSort }: Props) {
               <div className={styles.taskScroll}>
                 {person.tasks.map(task => (
                   <div key={task.taskId} className={styles.taskItem}>
-                    <strong>{task.count} x {task.task} ({task.basePoints} puncte) = {task.points} puncte</strong>
+                    <strong>{taskDepartments?.has(task.taskId) && `[${taskDepartments.get(task.taskId)}] `}{task.count} x {task.task} ({task.basePoints} puncte) = {task.points} puncte</strong>
                   </div>
                 ))}
               </div>

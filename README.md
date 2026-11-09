@@ -38,7 +38,7 @@ Do not copy a page to add a department or duplicate a Firestore query in JSX.
 | Change | Start here |
 | --- | --- |
 | Department URLs, navigation order, and request options | [constants/departments.ts](./src/constants/departments.ts) |
-| Layout and tabs for all four departments | [DepartmentPage.tsx](./src/pages/Department/DepartmentPage.tsx) |
+| Layout and tabs for GENERAL and the four departments | [DepartmentPage.tsx](./src/pages/Department/DepartmentPage.tsx) |
 | Leaderboard rows and task catalog | [LeaderboardTable.tsx](./src/pages/Department/LeaderboardTable.tsx), [AvailableTasksTable.tsx](./src/pages/Department/AvailableTasksTable.tsx) |
 | Table ordering and shared clickable headers | [sorting.ts](./src/pages/Department/sorting.ts), [SortableHeader.tsx](./src/pages/Department/SortableHeader.tsx) |
 | Shared colors and composable controls | [tokens.css](./src/styles/tokens.css), [ui.module.css](./src/styles/ui.module.css) |
@@ -61,6 +61,7 @@ Do not copy a page to add a department or duplicate a Firestore query in JSX.
 | Safe return URLs after login | [navigation.ts](./src/utils/navigation.ts) |
 | Score calculations and approval transactions | [scoring.ts](./src/utils/scoring.ts), [requestReview.ts](./src/services/requestReview.ts) |
 | Live department standings and task catalog | [useLeaderboard.ts](./src/hooks/useLeaderboard.ts), [leaderboardService.ts](./src/services/leaderboardService.ts) |
+| IT-admin global score reset | [ResetScoresButton.tsx](./src/components/admin/ResetScoresButton.tsx), [scoringResetService.ts](./src/services/scoringResetService.ts) |
 | Live task names and prices in request history/admin | [useTaskCatalog](./src/hooks/useTasks.ts), [taskCatalog.ts](./src/services/taskCatalog.ts) |
 | Shared data types | [models/index.ts](./src/models/index.ts) |
 
@@ -71,10 +72,12 @@ the feature rather than creating a generic "common" folder or a second MVC frame
 
 ### Follow these contracts
 
-- HR/PR/IT/FR use one department page, not four copies. The department list drives
-  routes, navigation, and new-request options in FR/PR/HR/IT order. `GENERAL` is
-  retained for administration and existing data, not for new requests. The request
-  service and Firestore creation rules enforce the same restriction.
+- GENERAL and HR/PR/IT/FR use one department page, not separate copies.
+  `leaderboardPages` puts GENERAL before FR/PR/HR/IT in navigation and routes.
+  GENERAL combines the four departments by member; task descriptions carry their
+  department prefix, for example `[IT] 3 x Tinut PV (15 puncte) = 45 puncte`.
+  Request and task departments remain FR/PR/HR/IT only; the request service and
+  Firestore creation rules enforce that restriction.
   All department tables support sorting through the full header area, with visible
   direction indicators and keyboard-operable buttons. HR retains its interactive
   decorations, not different sorting rules. Sorting survives tab switches and resets when
@@ -85,6 +88,13 @@ the feature rather than creating a generic "common" folder or a second MVC frame
 - `/requests` is the only member-history implementation. `/my-requests` redirects
   there for compatibility. Member and admin screens still have different jobs;
   do not combine their permissions into a large configurable card.
+- `/` and login without a valid explicit destination lead to `/general` for every
+  role. Valid internal destinations still take priority. Small local components in
+  [AppRoutes.tsx](./src/AppRoutes.tsx) separate signed-out routes, signed-in routes,
+  and role-load errors without deeply nested conditionals.
+- Task editing opens inside the selected card and focuses its description.
+  Creation still opens above the list. Both forms use the existing task editor;
+  renaming or changing points updates the existing task document, not its ID.
 - Request services convert Firestore timestamps to `Date` objects. Components
   format these dates; they must not call `.toDate()` on service results.
   Calendar-only `YYYY-MM-DD` strings are formatted as local calendar dates, not
@@ -169,12 +179,17 @@ end-to-end tests. Pushes to `main` then deploy the Firestore rules and indexes
 FTPS. Without that secret the rules step is skipped with a warning, and the rules
 must be deployed by hand: `npx.cmd firebase deploy --only firestore:rules,firestore:indexes --project s2ws2w`.
 
+The score-reset change requires the updated rules **before** the frontend:
+rankings now read `scoringSettings/global`, even when that document does not exist.
+No new index is required. Already-open older frontends ignore this cutoff; reload
+them when releasing the reset feature.
+
 ## Firebase backend
 
 There is no custom backend server or Cloud Functions implementation in this
 repository. React calls Firebase Authentication and Cloud Firestore directly.
 Firestore holds `members`, `pointRequests`, `departmentTasks`, `admins`,
-`secretaries`, and `adminTransfers`. Firebase Storage is initialized, but `storage.rules` denies
+`secretaries`, `adminTransfers`, and `scoringSettings/global`. Firebase Storage is initialized, but `storage.rules` denies
 all access. Firebase Hosting configuration exists; the active deployment workflow
 uses Hostinger instead.
 
@@ -190,7 +205,24 @@ uses Hostinger instead.
 | Event day | `eventDate` as a `YYYY-MM-DD` string, a calendar day without a time zone |
 | Transfer expiry | Derived: `createdAt` + 24 hours; never stored |
 | Season | Derived: the academic year starting 1 September. Rankings count only approved requests dated in it; older pending requests read as cancelled and the rules refuse new or reviewed ones dated before it |
+| Manual score cutoff | `scoringSettings/global.resetAt` and `resetBy`; only admins explicitly assigned IT can write the server timestamp and their own email |
 | Limits (points, repetitions, departments, domain, transfer lifetime) | `VALIDATION`/`departments.ts` in the app and the matching functions at the top of `firestore.rules`; `src/constants/rulesParity.test.ts` fails if they differ |
+
+### Resetting scores without deleting history
+
+The admin panel shows the reset button only to admins explicitly assigned `IT`.
+A GENERAL-only admin, IT secretary, or member cannot reset; Firestore rules
+enforce this independently of the button. Confirmation resets GENERAL and all
+four department rankings together.
+
+The action writes the exact server reset instant, not midnight. Rankings retain
+the academic-year event-date filter and count only requests whose approval time
+(`reviewedAt`) is at or after this cutoff. An older pending submission can count
+when approved after the reset. Tasks, prices, requests, and history are untouched.
+Without a reset document, the existing academic-year calculation applies.
+
+The cutoff is applied to the already-loaded approved history; it does not reduce
+Firestore reads. This is separate from wiping or migrating the database.
 
 ### Resetting the production database
 
@@ -248,7 +280,7 @@ checking in configuration alone does not update those resources.
 - A request can leave `pending` only once. Approvals, rejections, and cancellation
   cannot overwrite one another, and settled task IDs/repetitions cannot be edited by
   client SDK operations.
-- All four department pages, the shared service, and request/admin score summaries
+- GENERAL, all four department pages, the shared service, and request/admin score summaries
   use one scoring implementation. Repetition counts and line-item totals agree.
   Task summaries group by ID and use the current catalog name/rate; task-count
   sorting counts completed repetitions, not the number of task groups.
@@ -260,8 +292,8 @@ checking in configuration alone does not update those resources.
   for manual review, not guessed or repaired automatically. Legacy records with
   no repetition field retain the original default of one; new requests require
   an explicit positive integer. No historical point estimates are used.
-- Leaderboards intentionally remain all-time totals and are labeled `PUNCTAJ TOTAL`.
-  No season restriction or historical data migration has been applied.
+- Leaderboards show academic-year totals, further restricted by the global
+  approval-time cutoff after an IT-admin reset. No historical records are rewritten.
 - Each mounted department view listens to approved requests and its task catalog.
   New approvals, task-point edits, renames, and deletions update the displayed
   scores and ordering without a refresh. History/admin also listen to the catalog
@@ -275,8 +307,8 @@ Validate this application and its updated rules together in staging before a
 coordinated release. Older frontends that copy task names or award snapshots are
 incompatible with the new write schema. Until the new rules are deployed, an
 updated frontend cannot submit ID-only requests against the earlier rules.
-The Hostinger workflow
-still deploys only the frontend, so rules need an explicit authorized deployment.
+If the workflow skips rule deployment because its credential is missing, deploy
+the rules explicitly before uploading the frontend.
 The local rules now close role self-creation/escalation, department-unscoped
 writes, empty-role privileges, and self-review. Members can read approved
 requests (the public rankings need them) and their own requests; pending,
@@ -295,9 +327,8 @@ implemented above. These application and delivery issues remain:
   because the rankings are computed from them.
 - Rankings still read all approved history and moderation reads every matching
   status record. Bound these reads without silently truncating rankings or search.
-- Per-department rounds/reset and historical-record repair are not implemented.
-  A reset must preserve history and task prices, start a new round at zero, and
-  define how previously pending requests enter that round.
+- Independent per-department rounds and historical-record repair are not
+  implemented. The global IT-admin reset above preserves history and task prices.
 - Legacy global styles still need further isolation outside the scoped components.
   Other screens have not received a complete accessibility audit.
 - Initial JavaScript remains above Vite's 500 kB warning threshold after route

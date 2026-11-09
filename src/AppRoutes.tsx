@@ -6,7 +6,7 @@ import Footer from './layout/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomeRedirect from './components/HomeRedirect';
 import PageErrorBoundary from './components/PageErrorBoundary';
-import { departmentPages } from './constants/departments';
+import { leaderboardPages } from './constants/departments';
 import { loginDestination, loginPath } from './utils/navigation';
 import ui from './styles/ui.module.css';
 
@@ -30,94 +30,74 @@ const AcceptTransfer = lazy(() => import('./pages/AcceptTransfer/AcceptTransfer'
 const Requests = lazy(() => import('./pages/Requests/Requests'));
 const DepartmentPage = lazy(() => import('./pages/Department/DepartmentPage'));
 
-function AppRoutes() {
-  const { user, roleError, retryRoles } = useAuth();
-  const location = useLocation();
+function RoleLoadError() {
+  const { roleError, retryRoles } = useAuth();
+  return (
+    <main className={ui.page} role="alert">
+      <p>Permisiunile nu au putut fi încărcate: {roleError}</p>
+      <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={retryRoles}>Reîncearcă</button>
+    </main>
+  );
+}
 
+function SignedOutRoutes() {
+  const location = useLocation();
+  const destination = location.pathname + location.search + location.hash;
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="*" element={<Navigate to={loginPath(destination)} replace />} />
+    </Routes>
+  );
+}
+
+function SignedInRoutes({ userId }: { userId: string }) {
+  const location = useLocation();
+  return (
+    <ProtectedRoute>
+      <Routes>
+        <Route path="/" element={<HomeRedirect />} />
+        <Route path="/welcome" element={<Welcome />} />
+        <Route path="/success" element={<Success />} />
+        {leaderboardPages.map(({ department, path }) => (
+          <Route key={path} path={path} element={<DepartmentPage key={department} department={department} />} />
+        ))}
+        <Route path="/requests" element={<Requests key={userId} />} />
+        <Route path="/my-requests" element={<Navigate to="/requests" replace />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/transfer" element={<AdminTransfer />} />
+        <Route path="/accept-transfer" element={<AcceptTransfer />} />
+        <Route path="/admin/setup" element={<AdminSetup />} />
+        <Route path="/login" element={<Navigate to={loginDestination(location.search)} replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ProtectedRoute>
+  );
+}
+
+function RouteContent() {
+  const { user, roleError } = useAuth();
+  if (roleError) return <RoleLoadError />;
+  if (!user) return <SignedOutRoutes />;
+  return <SignedInRoutes userId={user.uid} />;
+}
+
+function AppRoutes() {
   return (
     <>
-      <Header 
+      <Header
         logo="/icons/logo best.png"
         links={[
-          ...departmentPages.map(({ department, path }) => ({ text: department, url: path })),
+          ...leaderboardPages.map(({ department, path }) => ({ text: department, url: path })),
           { text: 'REQUESTS', url: '/requests' },
           { text: 'ADMIN', url: '/admin' }
         ]}
       />
-      
       <PageErrorBoundary>
-      <Suspense fallback={<main role="status" style={{ padding: 40, textAlign: 'center' }}>Se încarcă pagina...</main>}>
-      {roleError ? (
-        <main className={ui.page} role="alert">
-          <p>Permisiunile nu au putut fi încărcate: {roleError}</p>
-          <button type="button" className={`${ui.button} ${ui.secondary}`} onClick={retryRoles}>Reîncearcă</button>
-        </main>
-      ) : <Routes>
-        {!user ? (
-          // Not logged in - show only login
-          <>
-            <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Navigate to={loginPath(location.pathname + location.search + location.hash)} replace />} />
-          </>
-        ) : (
-          // Logged in - show all pages
-          <>
-            <Route path="/" element={
-              <ProtectedRoute>
-                <HomeRedirect />
-              </ProtectedRoute>
-            } />
-            <Route path="/welcome" element={
-              <ProtectedRoute>
-                <Welcome />
-              </ProtectedRoute>
-            } />
-            <Route path="/success" element={
-              <ProtectedRoute>
-                <Success />
-              </ProtectedRoute>
-            } />
-            {departmentPages.map(({ department, path }) => (
-              <Route key={path} path={path} element={
-                <ProtectedRoute>
-                  <DepartmentPage key={department} department={department} />
-                </ProtectedRoute>
-              } />
-            ))}
-            <Route path="/requests" element={
-              <ProtectedRoute>
-                <Requests key={user.uid} />
-              </ProtectedRoute>
-            } />
-            <Route path="/my-requests" element={<Navigate to="/requests" replace />} />
-            <Route path="/admin" element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/transfer" element={
-              <ProtectedRoute>
-                <AdminTransfer />
-              </ProtectedRoute>
-            } />
-            <Route path="/accept-transfer" element={
-              <ProtectedRoute>
-                <AcceptTransfer />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/setup" element={
-              <ProtectedRoute>
-                <AdminSetup />
-              </ProtectedRoute>
-            } />
-            <Route path="/login" element={<Navigate to={loginDestination(location.search)} replace />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </>
-        )}
-      </Routes>}
-      </Suspense>
+        <Suspense fallback={<main role="status" style={{ padding: 40, textAlign: 'center' }}>Se încarcă pagina...</main>}>
+          <RouteContent />
+        </Suspense>
       </PageErrorBoundary>
-      
       <Footer />
     </>
   );
