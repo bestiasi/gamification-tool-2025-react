@@ -176,8 +176,23 @@ do not test writes against real accounts/data without explicit authorization.**
 Pull requests and pushes to `main` run lint, unit tests, Firestore rules tests and
 end-to-end tests. Pushes to `main` then deploy the Firestore rules and indexes
 (secret `FIREBASE_SERVICE_ACCOUNT`) before uploading the frontend to Hostinger over
-FTPS. Without that secret the rules step is skipped with a warning, and the rules
-must be deployed by hand: `npx.cmd firebase deploy --only firestore:rules,firestore:indexes --project s2ws2w`.
+FTPS. A missing credential, failed Firebase authentication, or failed rules/index
+deployment stops the release; the frontend is not uploaded against older rules.
+
+One-time setup by a repository/Firebase administrator, using the web interfaces:
+
+1. In Google Cloud IAM, provision a dedicated deployment service account for
+   `s2ws2w`, authorized to publish Firebase Rules and manage Firestore indexes.
+   Generate its JSON key for GitHub Actions; do not commit it or paste it into chat.
+2. In this GitHub repository, open **Settings > Secrets and variables > Actions >
+   New repository secret**. Name it `FIREBASE_SERVICE_ACCOUNT` and paste the JSON
+   key as its value. This is separate from the frontend's Firebase API key.
+3. Keep the existing Hostinger FTP secrets configured. Push or merge to `main`;
+   watch **Actions > Test and deploy to Hostinger** for the test and deployment
+   results. Pull requests run checks only, without deploying or needing the secret.
+
+After setup, publishing changes through `main` deploys the rules automatically;
+contributors do not need to run Firebase CLI commands locally.
 
 The score-reset change requires the updated rules **before** the frontend:
 rankings now read `scoringSettings/global`, even when that document does not exist.
@@ -307,8 +322,8 @@ Validate this application and its updated rules together in staging before a
 coordinated release. Older frontends that copy task names or award snapshots are
 incompatible with the new write schema. Until the new rules are deployed, an
 updated frontend cannot submit ID-only requests against the earlier rules.
-If the workflow skips rule deployment because its credential is missing, deploy
-the rules explicitly before uploading the frontend.
+The deployment workflow requires its Firebase credential and stops before
+uploading the frontend if rules deployment fails.
 The local rules now close role self-creation/escalation, department-unscoped
 writes, empty-role privileges, and self-review. Members can read approved
 requests (the public rankings need them) and their own requests; pending,

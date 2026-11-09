@@ -32,9 +32,9 @@ export default function DepartmentPage({ department }: { department: Department 
   return (
     <main className={`${ui.page} ${styles.page}`}>
       <header className={styles.banner}>
-        <div className={styles.logoFrame}>
-          <img src={isGeneral ? '/icons/logo best.png' : `/icons/logo${department}.png`} alt={`${department} Logo`} />
-        </div>
+        {!isGeneral && <div className={styles.logoFrame}>
+          <img src={`/icons/logo${department}.png`} alt={`${department} Logo`} />
+        </div>}
         <h1>PUNCTAJ TOTAL {department}</h1>
       </header>
       {loading ? (
